@@ -1,0 +1,63 @@
+:root {
+  /*
+    Fidelity Life-inspired prototype palette.
+    The public Fidelity Life website uses a strong red-led identity with white and charcoal contrast,
+    so this palette keeps the funeral-service experience compassionate and trustworthy while staying aligned
+    with the brand direction observed on the public site.
+  */
+
+  /* Fidelity Life brand palette */
+  --fidelity-red: #C8102E;
+  --fidelity-red-dark: #7B1E2B;
+  --fidelity-red-soft: #F7E6EA;
+  --fidelity-white: #FFFFFF;
+  --fidelity-charcoal: #242424;
+  --fidelity-light-grey: #F5F5F5;
+  --fidelity-burgundy: #7B1E2B;
+
+  /* Navy — header, footer, headings */
+  --navy-950: #1f1f1f;
+  --navy-900: #242424;
+  --navy-800: #242424; /* primary header background */
+  --navy-700: #3a3a3a;
+  --navy-100: #f4f4f4;
+
+  /* Muted gold — primary accent, buttons */
+  --gold-100: #f7e9eb;
+  --gold-300: #d7a3af;
+  --gold-500: #C8102E; /* muted gold — primary accent */
+  --gold-600: #7B1E2B;
+  --gold-700: #5d1520;
+
+  /* Warm neutrals — background, surfaces, text */
+  --bg: #F5F5F5; /* warm off-white */
+  --bg-soft: #fafafa;
+  --surface: #FFFFFF;
+  --text: #242424; /* dark grey */
+  --text-muted: #575757;
+  --border: #e8e8e8;
+
+  /* Urgent assistance accent (muted brick) */
+  --brick-600: #7B1E2B;
+
+  /* Typography */
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  /* Layout */
+  --header-h: 72px;
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(36, 36, 36, 0.06), 0 1px 3px rgba(36, 36, 36, 0.08);
+  --shadow-md: 0 8px 20px -8px rgba(36, 36, 36, 0.28);
+  --shadow-lg: 0 24px 48px -16px rgba(36, 36, 36, 0.38);
+
+  /* Accessibility */
+  --focus-ring: rgba(200, 16, 46, 0.4);
+}
+
+:root {
+  color-scheme: light;
+}

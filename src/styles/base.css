@@ -1,0 +1,107 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  color: var(--navy-900);
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(2.3rem, 5.2vw, 3.55rem); letter-spacing: -0.015em; }
+h2 { font-size: clamp(1.75rem, 3.2vw, 2.45rem); letter-spacing: -0.01em; }
+h3 { font-size: 1.3rem; }
+h4 { font-size: 1.08rem; }
+
+p { margin: 0; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+a { color: var(--navy-700); }
+
+img, svg { display: block; max-width: 100%; }
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -70px;
+  left: 16px;
+  z-index: 400;
+  background: var(--navy-900);
+  color: #f8f3e6;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top 180ms ease;
+}
+
+.skip-link:focus-visible { top: 12px; }
+
+.container {
+  width: min(1140px, 100% - 40px);
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: clamp(56px, 7vw, 92px);
+}
+
+.section--soft { background: var(--bg-soft); }
+
+.section--navy {
+  background: var(--navy-900);
+  color: #f3ecdc;
+}
+
+.section--navy h1,
+.section--navy h2,
+.section--navy h3 { color: #faf5ea; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

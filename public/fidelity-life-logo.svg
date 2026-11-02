@@ -1,0 +1,25 @@
+<svg width="720" height="260" viewBox="0 0 720 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="260" fill="#F9F5F0"/>
+  <g transform="translate(120 18)">
+    <path d="M82 28C94 16 108 10 126 10C144 10 158 16 169 28" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 130H196" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M70 130V70C70 60 78 52 88 52H164C174 52 182 60 182 70V130" stroke="#C83A4D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M126 52V24" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M66 130L96 148H156L186 130" stroke="#C83A4D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M82 130H170" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M126 129V172" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M126 172H62" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M126 172H190" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M94 110C100 97 112 91 126 91C140 91 152 97 158 110" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M103 80C109 74 117 70 126 70C135 70 143 74 149 80" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M80 58L126 18L172 58" stroke="#C83A4D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M126 32V52" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M126 130V172" stroke="#C83A4D" stroke-width="6" stroke-linecap="round"/>
+    <path d="M126 52L136 85H116L126 52Z" fill="#C83A4D"/>
+    <path d="M87 130H165C165 147 153 160 126 160C99 160 87 147 87 130Z" fill="#C83A4D"/>
+    <path d="M70 130H52V170H70V130Z" fill="#C83A4D"/>
+    <path d="M182 130H200V170H182V130Z" fill="#C83A4D"/>
+  </g>
+  <text x="360" y="138" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" letter-spacing="1" fill="#C83A4D">FIDELITY LIFE</text>
+  <text x="360" y="188" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" letter-spacing="2" fill="#C83A4D">ASSURANCE OF ZIMBABWE</text>
+</svg>
