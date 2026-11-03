@@ -1,5 +1,5 @@
 {
-  "name": "funeral-service-backend",
+  "name": "fidelity-backend",
   "version": "1.0.0",
   "description": "Fidelity Life Assurance Platform API (Express + Prisma)",
   "main": "dist/server.js",

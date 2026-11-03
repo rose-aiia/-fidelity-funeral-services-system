@@ -269,7 +269,7 @@ three staff numbers in the table above.
   catalogue and can't be priced into new orders. Existing assignments and orders are left alone so staff can
   finish them (a switched-off provider's staff can still sign in and complete what they hold).
 
-How these shapes map to the backend's Prisma models (`funeral-service-backend/prisma/schema.prisma`), and what
+How these shapes map to the backend's Prisma models (`backend/prisma/schema.prisma`), and what
 the schema still needs:
 
 | API | Prisma | Notes |

@@ -1,6 +1,6 @@
 # Changelog
 
-What changed in the front end (`funeral-service-prototype/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `funeral-service-prototype/docs/openapi.yaml` and a reference server is `npm run mock-api`.
+What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
 ## Phase 4: staff portal (uncommitted at the time of writing)
 

@@ -1,6 +1,6 @@
 # Development notes
 
-How the Fidelity Funeral Services prototype is built. For what the app does, see the [README](../README.md).
+How the Fidelity Funeral Services prototype is built. For what the app does, see the [README](../../README.md).
 
 ```bash
 npm run dev      # start the dev server
