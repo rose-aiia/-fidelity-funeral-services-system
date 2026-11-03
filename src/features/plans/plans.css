@@ -1,0 +1,83 @@
+@layer features {
+  .plan-grid { align-items: stretch; }
+
+  .plan-card {
+    --card-pad: 22px;
+    --stack-gap: 18px;
+    align-items: flex-start;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .plan-card { position: relative; }
+  .plan-card:hover { transform: translateY(-2px); }
+
+  /* Pinned to the edge so a badge never shifts the card's content out of line with its neighbours. */
+  .plan-card .badge {
+    position: absolute;
+    top: 0;
+    left: 22px;
+    transform: translateY(-50%);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  .plan-card h3 { font-size: 1.2rem; }
+  .plan-card__header { display: flex; flex-direction: column; gap: var(--space-3); }
+
+  .plan-card__price {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-heading);
+  }
+
+  .plan-card__price small {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .plan-card .check-list { width: 100%; gap: var(--space-2); }
+  .plan-card .check-list li { color: var(--color-text); }
+
+  .plan-card--popular { border-width: 2px; border-color: var(--color-accent-border); }
+
+  .plan-card--selected {
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-tint), var(--color-surface));
+  }
+
+  .quote-card { position: sticky; top: calc(var(--header-h) + var(--space-3)); }
+  .quote-card__header { margin-bottom: 18px; }
+  .quote-card h3 { margin-top: var(--space-2); font-size: 1.5rem; }
+  .quote-form { display: grid; gap: var(--space-3); }
+
+  .quote-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block: var(--space-2);
+    padding: 14px var(--space-4);
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: var(--space-3);
+  }
+
+  .quote-summary span { color: var(--color-text-muted); }
+  .quote-summary strong { color: var(--color-heading); font-size: var(--text-xl); }
+
+  @media (max-width: 960px) {
+    .quote-card { position: static; }
+  }
+
+  @media (max-width: 640px) {
+    .quote-summary { flex-direction: column; align-items: flex-start; }
+  }
+}

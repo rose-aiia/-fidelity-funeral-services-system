@@ -1,5 +1,10 @@
+/*
+  Cascade order is declared once, here. Later layers win regardless of file order,
+  so feature styles can override components without specificity fights.
+*/
+@layer tokens, base, layout, components, features;
+
 @import './styles/tokens.css';
 @import './styles/base.css';
 @import './styles/layout.css';
-@import './styles/ui.css';
-@import './styles/pages.css';
+@import './styles/components.css';

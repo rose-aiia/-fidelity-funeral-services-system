@@ -1,0 +1,4 @@
+@layer features {
+  .faq-layout { display: grid; gap: var(--space-5); }
+  .faq-list { display: grid; gap: var(--space-3); }
+}

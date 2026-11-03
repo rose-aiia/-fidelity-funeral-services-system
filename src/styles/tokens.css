@@ -1,63 +1,105 @@
-:root {
-  /*
-    Fidelity Life-inspired prototype palette.
-    The public Fidelity Life website uses a strong red-led identity with white and charcoal contrast,
-    so this palette keeps the funeral-service experience compassionate and trustworthy while staying aligned
-    with the brand direction observed on the public site.
-  */
+/*
+  Design tokens, in two tiers:
+  1. Palette  - raw values, named for what they are (red, ink, grey). Never used in components.
+  2. Semantic - named for their job (--color-accent, --color-surface). Components use only these.
+  Re-theming means editing tier 2 (or swapping tier 1 values); component CSS never changes.
+*/
+@layer tokens {
+  :root {
+    color-scheme: light;
 
-  /* Fidelity Life brand palette */
-  --fidelity-red: #C8102E;
-  --fidelity-red-dark: #7B1E2B;
-  --fidelity-red-soft: #F7E6EA;
-  --fidelity-white: #FFFFFF;
-  --fidelity-charcoal: #242424;
-  --fidelity-light-grey: #F5F5F5;
-  --fidelity-burgundy: #7B1E2B;
+    /* ---- Palette: Fidelity Life brand ---- */
+    --red-50: #f7e6ea;
+    --red-300: #d7a3af;
+    --red-500: #c8102e;
+    --red-700: #7b1e2b;
+    --red-900: #5d1520;
 
-  /* Navy — header, footer, headings */
-  --navy-950: #1f1f1f;
-  --navy-900: #242424;
-  --navy-800: #242424; /* primary header background */
-  --navy-700: #3a3a3a;
-  --navy-100: #f4f4f4;
+    --ink-950: #1a1a1a;
+    --ink-900: #242424;
+    --ink-700: #3a3a3a;
+    --ink-500: #575757;
+    --grey-200: #e8e8e8;
+    --grey-100: #f5f5f5;
+    --grey-50: #fafafa;
+    --white: #ffffff;
 
-  /* Muted gold — primary accent, buttons */
-  --gold-100: #f7e9eb;
-  --gold-300: #d7a3af;
-  --gold-500: #C8102E; /* muted gold — primary accent */
-  --gold-600: #7B1E2B;
-  --gold-700: #5d1520;
+    /* ---- Semantic: surfaces & text ---- */
+    --color-bg: var(--grey-100);
+    --color-bg-soft: var(--grey-50);
+    --color-surface: var(--white);
+    --color-border: var(--grey-200);
+    --color-text: var(--ink-900);
+    --color-text-muted: var(--ink-500);
+    --color-heading: var(--ink-900);
 
-  /* Warm neutrals — background, surfaces, text */
-  --bg: #F5F5F5; /* warm off-white */
-  --bg-soft: #fafafa;
-  --surface: #FFFFFF;
-  --text: #242424; /* dark grey */
-  --text-muted: #575757;
-  --border: #e8e8e8;
+    /* ---- Semantic: brand accent ---- */
+    --color-accent: var(--red-500);
+    --color-accent-strong: var(--red-700);
+    --color-accent-deep: var(--red-900);
+    --color-accent-tint: var(--red-50);
+    --color-accent-border: var(--red-300);
+    --color-on-accent: var(--white);
 
-  /* Urgent assistance accent (muted brick) */
-  --brick-600: #7B1E2B;
+    /* ---- Semantic: inverse (dark) surfaces ---- */
+    --color-inverse: var(--ink-900);
+    --color-inverse-deep: var(--ink-950);
+    --color-inverse-hover: var(--ink-700);
+    --color-on-inverse: var(--grey-100);
+    --color-on-inverse-muted: rgba(255, 255, 255, 0.72);
+    --color-on-inverse-faint: rgba(255, 255, 255, 0.12);
 
-  /* Typography */
-  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    --color-focus-ring: rgba(200, 16, 46, 0.4);
+    --color-hover-tint: rgba(200, 16, 46, 0.06);
 
-  /* Layout */
-  --header-h: 72px;
-  --radius: 14px;
-  --radius-sm: 10px;
+    /* ---- Typography ---- */
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 
-  /* Elevation */
-  --shadow-sm: 0 1px 2px rgba(36, 36, 36, 0.06), 0 1px 3px rgba(36, 36, 36, 0.08);
-  --shadow-md: 0 8px 20px -8px rgba(36, 36, 36, 0.28);
-  --shadow-lg: 0 24px 48px -16px rgba(36, 36, 36, 0.38);
+    --text-sm: 0.92rem;
+    --text-md: 1rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.3rem;
+    --text-display-sm: clamp(1.5rem, 2.6vw, 2rem);
+    --text-display-md: clamp(1.75rem, 3.2vw, 2.45rem);
+    --text-display-lg: clamp(2.3rem, 5.2vw, 3.55rem);
 
-  /* Accessibility */
-  --focus-ring: rgba(200, 16, 46, 0.4);
-}
+    --leading-tight: 1.18;
+    --leading-body: 1.65;
+    --tracking-eyebrow: 0.16em;
 
-:root {
-  color-scheme: light;
+    /* ---- Spacing (4px base) ---- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --section-pad: clamp(56px, 7vw, 92px);
+
+    /* ---- Shape ---- */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
+
+    /* ---- Elevation ---- */
+    --shadow-sm: 0 1px 2px rgba(36, 36, 36, 0.06), 0 1px 3px rgba(36, 36, 36, 0.08);
+    --shadow-md: 0 8px 20px -8px rgba(36, 36, 36, 0.28);
+    --shadow-lg: 0 24px 48px -16px rgba(36, 36, 36, 0.38);
+
+    /* ---- Motion ---- */
+    --duration: 180ms;
+    --ease: ease;
+
+    /* ---- Layout ---- */
+    --container-w: 1140px;
+    --header-h: 5rem;
+
+    /* ---- Stacking ---- */
+    --z-header: 100;
+    --z-drawer: 99;
+    --z-skip: 400;
+    --z-toast: 300;
+  }
 }

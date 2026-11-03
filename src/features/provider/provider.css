@@ -1,0 +1,18 @@
+@layer features {
+  .provider-copy p:not(.eyebrow) { color: var(--color-text-muted); }
+
+  .provider-page { background: linear-gradient(180deg, var(--color-bg-soft), var(--color-surface)); }
+  .provider-page__content { padding-block: 52px 60px; }
+  .provider-page .split { margin-top: var(--space-4); }
+
+  .provider-page__panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 28px;
+  }
+
+  @media (max-width: 960px) {
+    .provider-page__panels { grid-template-columns: 1fr; }
+  }
+}
