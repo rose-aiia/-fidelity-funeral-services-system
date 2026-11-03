@@ -1,69 +1,71 @@
-# Fidelity Funeral Services
+# Fidelity Funeral Services System
 
-A digital home for families in Zimbabwe and the diaspora when they lose someone. It brings funeral planning, cover, burial arrangements, remembrance and aftercare into one place, so a grieving family has one place to go instead of many phone calls.
+A digital home for families in Zimbabwe and the diaspora when they lose someone: funeral
+planning, cover, burial arrangements, remembrance and aftercare in one place.
 
-> This is a sample prototype. All plans, prices, policies, people and memorials in it are made up.
+The repository is a small monorepo holding three apps plus shared docs.
 
-![Landing page of Fidelity Funeral Services](docs/screenshots/landing-page.png)
+## Layout
 
-## Who it is for
+| Path | What it is |
+| --- | --- |
+| `funeral-service-prototype/` | The React front end (Vite + React 19 + React Router 7 + TanStack Query). Feature-based: `src/features/*`, shared `src/components/ui`, `src/lib`, `src/config`. |
+| `funeral-service-backend/` | The API (Express + Prisma + Zod, TypeScript). Layered: `src/config`, `src/routes`, `src/controllers`, `src/middleware`; schema in `prisma/schema.prisma`. |
+| `funeral-service-frontend-api/` | A thin shared API client stub. |
+| `docs/` | Frontend design and integration docs (see `funeral-service-prototype/docs`). |
 
-- **Families who need help now**: someone has just passed away and they need to know what to do next.
-- **People planning ahead**: comparing funeral plans for themselves or their family.
-- **Policyholders**: checking their cover and asking for help, such as making a claim.
-- **Relatives and friends**: remembering a loved one and leaving a tribute, wherever they live.
-- **Funeral professionals**: managing the services they deliver for families.
+## Running the apps
 
-## What families can do
+Each app has its own `package.json`. Install and run them separately.
 
-### Get help straight away
+### Front end
 
-The first thing on the page is a way to reach a funeral care adviser. Urgent arrangements, transport, repatriation questions and cemetery guidance all start from here.
+```sh
+cd funeral-service-prototype
+npm install
+cp .env.example .env.local   # optional: tweak API mode / proxy target
+npm run dev                  # http://localhost:5173
+```
 
-### Choose a funeral plan
+By default the front end runs on built-in sample data (`VITE_API_MODE=mock`) and needs no
+backend. To exercise live mode without a backend, use the reference mock server:
 
-Compare three plans (**Essential**, **Comfort** and **Legacy**), see what each one covers, and request a quote that fits the family's size and wishes.
+```sh
+cd funeral-service-prototype
+npm run mock-api             # reference server on :8080
+echo VITE_API_MODE=live > .env.local
+npm run dev
+```
 
-### Find a burial place
+### Backend
 
-Search cemeteries by town or area, compare plot guidance and send an enquiry about a grave.
+```sh
+cd funeral-service-backend
+npm install
+cp .env.example .env         # set DATABASE_URL and a strong JWT_SECRET
+npm run dev                  # http://localhost:4000
+```
 
-### Bring someone home
+To point the front end at the real backend instead of the mock, set
+`API_PROXY_TARGET=http://localhost:4000` in `funeral-service-prototype/.env.local`.
+The Vite dev proxy forwards `/api` to that target with the `/api` prefix removed, so the
+browser sees a single origin and no CORS setup is needed in development.
 
-Repatriation support for families abroad: an overview of the journey, transport and the documents needed to arrange a funeral across borders.
+### Ports at a glance
 
-### Remember a loved one
+| Service | Port |
+| --- | --- |
+| Front end (Vite dev) | 5173 |
+| Backend API | 4000 |
+| Reference mock API (`npm run mock-api`) | 8080 |
 
-Create an online memorial with their life story and photographs. Keep it private until it is ready, then publish and share the link. Visitors can leave flowers, light a candle and write a tribute, and the family reads every tribute before it is shown.
+## Conventions
 
-### Arrange everything else
+- **Own the price server-side.** The front end only previews totals; the API computes them.
+- **Errors are `{ code, message, details? }`** with the right status (422 validation, 429 rate limit).
+- **Feature isolation.** Each feature owns its `api.ts`, `queries.ts` and UI; only `lib/http.ts`
+  talks to the network.
+- **Secrets never committed.** `.env` files are gitignored; only `.env.example` is tracked.
 
-A marketplace of trusted partners for what a funeral needs: headstones and plaques, wreaths, marquee and seating hire, programmes and stationery, and memorial video tributes.
-
-### Stay supported afterwards
-
-Aftercare does not stop at the funeral. Families get guidance on next steps, estate help and ideas for remembrance, including AI-assisted suggestions.
-
-## Your account
-
-Customers sign in with their mobile number and a one-time code, with no password to remember. From their account they can:
-
-- **Link their policy** and see who is covered and for how much.
-- **Ask for help**, for example "a loved one has passed away" or "make a claim", choose how they want to be contacted (phone call, WhatsApp or SMS) and follow the request from *received* to *complete*.
-- **Manage memorials** they have created: story, photos, tributes and sharing.
-- **Keep their profile** up to date.
-
-## For funeral providers
-
-A provider portal, for provider staff and administrators who sign in, shows how funeral professionals could manage the services they run for families.
-
-## Trying the demo
-
-Run `npm install` and then `npm run dev`, and open the address it prints.
-
-- On the sign-in page, pick one of the **demo personas** (a policyholder, a new family or provider staff) to get in with one click.
-- The one-time code is always `123456`.
-- To link a policy by hand, use policy number `FLA-318227` with ID `08-765432-B-15`.
-- Everything you do is saved in your own browser only.
-
-How the app is built, and how to connect it to a real backend, is in [docs/development.md](docs/development.md).
+See `funeral-service-prototype/README.md` for the product walkthrough and
+`funeral-service-prototype/docs/backend-integration.md` for the API contract notes.

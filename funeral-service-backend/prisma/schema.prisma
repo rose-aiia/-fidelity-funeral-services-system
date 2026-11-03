@@ -1,0 +1,446 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum QuotationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+  CLOSED
+}
+
+enum AssistanceStatus {
+  OPEN
+  REVIEWED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AssignmentType {
+  QUOTATION
+  ASSISTANCE
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+  VOICE
+  MESSAGE
+  DOCUMENT
+}
+
+enum ConsentStatus {
+  PENDING
+  GRANTED
+  REVOKED
+}
+
+enum MemorialStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  HIDDEN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  CANCELLED
+  COMPLETED
+}
+
+enum AuditActionType {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  ASSIGN
+  APPROVE
+  REJECT
+  SYSTEM
+}
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  role              UserRole
+  isActive          Boolean   @default(true) @map("is_active")
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  lastLoginAt       DateTime? @map("last_login_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  customerProfile   CustomerProfile?
+  adminProfile      Admin?
+  auditLogsAsUser   AuditLog[] @relation("AuditLogActorUser")
+
+  @@map("users")
+}
+
+model CustomerProfile {
+  id                   String                    @id @default(uuid()) @db.Uuid
+  userId               String                    @unique @map("user_id") @db.Uuid
+  firstName            String                    @map("first_name")
+  lastName             String                    @map("last_name")
+  phoneNumber          String?                   @map("phone_number")
+  nationalIdOrPassport String?                   @map("national_id_or_passport")
+  addressLine1         String?                   @map("address_line_1")
+  addressLine2         String?                   @map("address_line_2")
+  city                 String?
+  province             String?
+  country              String?
+  dateOfBirth          DateTime?                 @map("date_of_birth")
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+
+  user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quotationRequests    QuotationRequest[]
+  assistanceRequests   FuneralAssistanceRequest[]
+  memorials            Memorial[]
+  marketplaceOrders    MarketplaceOrder[]
+  mediaConsents        MediaConsent[]
+  uploadedMemorialMedia MemorialMedia[]
+
+  @@map("customer_profiles")
+}
+
+model Admin {
+  id              String                     @id @default(uuid()) @db.Uuid
+  userId          String                     @unique @map("user_id") @db.Uuid
+  firstName       String                     @map("first_name")
+  lastName        String                     @map("last_name")
+  jobTitle        String?                    @map("job_title")
+  isSuperAdmin    Boolean                    @default(false) @map("is_super_admin")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerRecords FuneralServiceProvider[]
+  assignments     ProviderAssignment[]
+  auditLogs       AuditLog[]
+
+  @@map("admins")
+}
+
+model FuneralServiceProvider {
+  id                 String               @id @default(uuid()) @db.Uuid
+  name               String
+  providerType       String               @map("provider_type")
+  contactPerson      String               @map("contact_person")
+  phoneNumber        String               @map("phone_number")
+  email              String?
+  addressLine1       String               @map("address_line_1")
+  addressLine2       String?              @map("address_line_2")
+  city               String
+  province           String
+  country            String
+  website            String?
+  description        String?
+  registrationNumber String?              @map("registration_number")
+  isActive           Boolean              @default(true) @map("is_active")
+  createdByAdminId   String               @map("created_by_admin_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+
+  createdByAdmin     Admin                @relation(fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  assignments        ProviderAssignment[]
+
+  @@unique([email])
+  @@unique([registrationNumber])
+  @@map("funeral_service_providers")
+}
+
+model FuneralPlan {
+  id                String             @id @default(uuid()) @db.Uuid
+  name              String             @unique
+  description       String
+  price             Decimal            @db.Decimal(10, 2)
+  isPopular         Boolean            @default(false) @map("is_popular")
+  isActive          Boolean            @default(true) @map("is_active")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @default(now()) @map("updated_at")
+
+  quotationRequests QuotationRequest[]
+
+  @@map("funeral_plans")
+}
+
+model QuotationRequest {
+  id            String             @id @default(uuid()) @db.Uuid
+  customerId    String             @map("customer_id") @db.Uuid
+  planId        String             @map("plan_id") @db.Uuid
+  serviceType   String             @map("service_type")
+  location      String
+  estimatedTotal Decimal            @map("estimated_total") @db.Decimal(10, 2)
+  status        QuotationStatus    @default(PENDING)
+  notes         String?
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @default(now()) @map("updated_at")
+
+  customer      CustomerProfile    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  plan          FuneralPlan        @relation(fields: [planId], references: [id], onDelete: Restrict)
+  assignments   ProviderAssignment[]
+
+  @@map("quotation_requests")
+}
+
+model FuneralAssistanceRequest {
+  id                   String              @id @default(uuid()) @db.Uuid
+  customerId           String              @map("customer_id") @db.Uuid
+  requestType          String              @map("request_type")
+  urgencyLevel         String              @map("urgency_level")
+  preferredServiceDate DateTime?           @map("preferred_service_date")
+  serviceLocation      String              @map("service_location")
+  description          String
+  status               AssistanceStatus    @default(OPEN)
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @default(now()) @map("updated_at")
+
+  customer             CustomerProfile     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  assignments          ProviderAssignment[]
+
+  @@map("funeral_assistance_requests")
+}
+
+model ProviderAssignment {
+  id                  String                    @id @default(uuid()) @db.Uuid
+  assignmentType      AssignmentType            @map("assignment_type")
+  providerId          String                    @map("provider_id") @db.Uuid
+  quotationRequestId  String?                   @map("quotation_request_id") @db.Uuid
+  assistanceRequestId String?                   @map("assistance_request_id") @db.Uuid
+  assignedByAdminId   String                    @map("assigned_by_admin_id") @db.Uuid
+  assignmentStatus    AssignmentStatus          @default(ASSIGNED) @map("assignment_status")
+  notes               String?
+  assignedAt          DateTime                  @default(now()) @map("assigned_at")
+  createdAt           DateTime                  @default(now()) @map("created_at")
+  updatedAt           DateTime                  @default(now()) @map("updated_at")
+
+  provider            FuneralServiceProvider    @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  quotationRequest    QuotationRequest?         @relation(fields: [quotationRequestId], references: [id], onDelete: Restrict)
+  assistanceRequest   FuneralAssistanceRequest?  @relation(fields: [assistanceRequestId], references: [id], onDelete: Restrict)
+  assignedByAdmin     Admin                     @relation(fields: [assignedByAdminId], references: [id], onDelete: Restrict)
+
+  @@map("provider_assignments")
+}
+
+model Memorial {
+  id                String          @id @default(uuid()) @db.Uuid
+  customerId        String          @map("customer_id") @db.Uuid
+  title             String
+  slug              String          @unique
+  deceasedFirstName String          @map("deceased_first_name")
+  deceasedLastName  String          @map("deceased_last_name")
+  dateOfBirth       DateTime?       @map("date_of_birth")
+  dateOfDeath       DateTime?       @map("date_of_death")
+  obituaryText      String?         @map("obituary_text")
+  location          String?
+  isPublic          Boolean         @default(true) @map("is_public")
+  status            MemorialStatus  @default(DRAFT)
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @default(now()) @map("updated_at")
+
+  customer          CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  media             MemorialMedia[]
+  messages          MemorialMessage[]
+  mediaConsents     MediaConsent[]
+
+  @@map("memorials")
+}
+
+model MemorialMedia {
+  id                  String          @id @default(uuid()) @db.Uuid
+  memorialId          String          @map("memorial_id") @db.Uuid
+  mediaType           MediaType       @map("media_type")
+  fileUrl             String          @map("file_url")
+  caption             String?
+  uploadedByCustomerId String          @map("uploaded_by_customer_id") @db.Uuid
+  isApproved          Boolean         @default(false) @map("is_approved")
+  consentStatus       ConsentStatus   @default(PENDING) @map("consent_status")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @default(now()) @map("updated_at")
+
+  memorial            Memorial        @relation(fields: [memorialId], references: [id], onDelete: Cascade)
+  uploadedByCustomer  CustomerProfile @relation(fields: [uploadedByCustomerId], references: [id], onDelete: Restrict)
+
+  @@map("memorial_media")
+}
+
+model MemorialMessage {
+  id          String      @id @default(uuid()) @db.Uuid
+  memorialId  String      @map("memorial_id") @db.Uuid
+  authorName  String      @map("author_name")
+  authorEmail String?     @map("author_email")
+  messageText String      @map("message_text")
+  isApproved  Boolean     @default(false) @map("is_approved")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @map("updated_at")
+
+  memorial    Memorial    @relation(fields: [memorialId], references: [id], onDelete: Cascade)
+
+  @@map("memorial_messages")
+}
+
+model MediaConsent {
+  id            String          @id @default(uuid()) @db.Uuid
+  customerId    String          @map("customer_id") @db.Uuid
+  memorialId    String?         @map("memorial_id") @db.Uuid
+  consentScope  String          @map("consent_scope")
+  consentStatus ConsentStatus   @default(PENDING) @map("consent_status")
+  grantedAt     DateTime?       @map("granted_at")
+  revokedAt     DateTime?       @map("revoked_at")
+  notes         String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @default(now()) @map("updated_at")
+
+  customer      CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  memorial      Memorial?       @relation(fields: [memorialId], references: [id], onDelete: SetNull)
+
+  @@map("media_consents")
+}
+
+model MarketplaceProduct {
+  id            String          @id @default(uuid()) @db.Uuid
+  name          String
+  category      String
+  description   String
+  price         Decimal         @db.Decimal(10, 2)
+  sku           String          @unique
+  stockQuantity Int             @default(0) @map("stock_quantity")
+  isActive      Boolean         @default(true) @map("is_active")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @default(now()) @map("updated_at")
+
+  orderItems    OrderItem[]
+
+  @@map("marketplace_products")
+}
+
+model MarketplaceOrder {
+  id              String          @id @default(uuid()) @db.Uuid
+  customerId      String          @map("customer_id") @db.Uuid
+  status          OrderStatus     @default(PENDING)
+  shippingAddress String?         @map("shipping_address")
+  orderNotes      String?         @map("order_notes")
+  totalAmount     Decimal         @default(0) @map("total_amount") @db.Decimal(10, 2)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @default(now()) @map("updated_at")
+
+  customer        CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items           OrderItem[]
+
+  @@map("marketplace_orders")
+}
+
+model OrderItem {
+  id        String             @id @default(uuid()) @db.Uuid
+  orderId   String             @map("order_id") @db.Uuid
+  productId String             @map("product_id") @db.Uuid
+  quantity  Int
+  unitPrice Decimal            @map("unit_price") @db.Decimal(10, 2)
+  lineTotal Decimal            @map("line_total") @db.Decimal(10, 2)
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  order     MarketplaceOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model AuditLog {
+  id          String          @id @default(uuid()) @db.Uuid
+  actorUserId String?         @map("actor_user_id") @db.Uuid
+  actorAdminId String?        @map("actor_admin_id") @db.Uuid
+  entityType  String          @map("entity_type")
+  entityId    String?         @map("entity_id") @db.Uuid
+  actionType  AuditActionType @map("action_type")
+  detailsJson Json?           @map("details_json")
+  ipAddress   String?         @map("ip_address")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  actorUser   User?           @relation("AuditLogActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorAdmin  Admin?          @relation(fields: [actorAdminId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model Cemetery {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String
+  addressLine1 String         @map("address_line_1")
+  addressLine2 String?        @map("address_line_2")
+  city         String
+  province     String
+  country      String
+  latitude     Decimal        @db.Decimal(9, 6)
+  longitude    Decimal        @db.Decimal(9, 6)
+  contactPhone String?        @map("contact_phone")
+  contactEmail String?        @map("contact_email")
+  description  String?
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @default(now()) @map("updated_at")
+
+  graveSections GraveSection[]
+  burialRecords BurialRecord[]
+
+  @@map("cemeteries")
+}
+
+model GraveSection {
+  id              String        @id @default(uuid()) @db.Uuid
+  cemeteryId      String        @map("cemetery_id") @db.Uuid
+  sectionName     String        @map("section_name")
+  sectionCode     String        @map("section_code")
+  description     String?
+  totalGraves     Int?          @map("total_graves")
+  availableGraves Int?          @map("available_graves")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @default(now()) @map("updated_at")
+
+  cemetery        Cemetery      @relation(fields: [cemeteryId], references: [id], onDelete: Restrict)
+  burialRecords   BurialRecord[]
+
+  @@unique([cemeteryId, sectionCode])
+  @@map("grave_sections")
+}
+
+model BurialRecord {
+  id                String       @id @default(uuid()) @db.Uuid
+  cemeteryId        String       @map("cemetery_id") @db.Uuid
+  graveSectionId    String       @map("grave_section_id") @db.Uuid
+  deceasedFirstName String       @map("deceased_first_name")
+  deceasedLastName  String       @map("deceased_last_name")
+  burialDate        DateTime?    @map("burial_date")
+  plotNumber        String?      @map("plot_number")
+  graveNumber       String?      @map("grave_number")
+  memorialNote      String?      @map("memorial_note")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @default(now()) @map("updated_at")
+
+  cemetery          Cemetery     @relation(fields: [cemeteryId], references: [id], onDelete: Restrict)
+  graveSection      GraveSection @relation(fields: [graveSectionId], references: [id], onDelete: Restrict)
+
+  @@map("burial_records")
+}

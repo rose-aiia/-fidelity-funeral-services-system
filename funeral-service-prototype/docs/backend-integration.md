@@ -13,8 +13,10 @@ and what that backend has to provide.
 Copy `.env.example` to `.env.local` to change them. Vite bakes these in at build time, so a `live` build
 needs `VITE_API_MODE=live` set when it is built. An unrecognised mode fails at startup.
 
-In development, requests to `/api` are proxied to `API_PROXY_TARGET` (default `http://localhost:8080`) with
-the `/api` prefix removed, so the browser sees a single origin and no CORS setup is needed.
+In development, requests to `/api` are proxied to `API_PROXY_TARGET` (default `http://localhost:8080`, the
+reference mock server) with the `/api` prefix removed, so the browser sees a single origin and no CORS setup
+is needed. To proxy to the real backend instead, set `API_PROXY_TARGET=http://localhost:4000` (its default
+`PORT`).
 
 ## Try it without a backend
 
