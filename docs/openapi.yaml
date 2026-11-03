@@ -15,6 +15,13 @@ info:
     `401` with code `unauthenticated` when it is missing or no longer valid. Failed code attempts are
     counted per phone number and failed policy-link attempts per user; after 5 the server answers `429`
     with code `locked_out`. National ID numbers held on policy records never leave the server.
+
+    **Memorials.** `/memorials/{slug}` endpoints are public: anyone can read a published memorial, leave a
+    tribute and light a candle. If the request carries a valid `sid` cookie it identifies the owner, who can
+    also see their own unpublished memorial. An unpublished memorial that is not yours answers `404`
+    `not_found`, exactly like one that does not exist. `/me/memorials` endpoints need the session cookie and
+    answer `404` (never `403`) for a memorial that belongs to someone else. Visitor tributes start `pending`
+    and appear publicly only once the owner approves them. Rate limits answer `429` with code `rate_limited`.
 servers:
   - url: /api
 
@@ -346,6 +353,367 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  /memorials/{slug}:
+    get:
+      summary: A memorial's public page
+      operationId: getMemorial
+      description: |
+        Never includes the owner. Anonymous callers get `404` `not_found` for a memorial that does not exist
+        or is unpublished; its owner (identified by the session cookie, if sent) can read it either way.
+      security:
+        - {}
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: The memorial.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Memorial' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+
+  /memorials/{slug}/tributes:
+    get:
+      summary: Approved tributes for a memorial
+      operationId: listTributes
+      description: Approved tributes only, newest first. Pending and removed tributes are never public.
+      security:
+        - {}
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: The tribute wall.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tribute' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+    post:
+      summary: Leave a tribute
+      operationId: createTribute
+      description: |
+        The tribute is `pending` until the owner approves it, except when the caller is the memorial's owner
+        (identified by the session cookie), in which case it is `approved` immediately. Limited to 5 tributes
+        per memorial per visitor (IP address) per hour.
+      security:
+        - {}
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewTribute' }
+      responses:
+        '201':
+          description: The stored tribute, with its status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tribute' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+        '422':
+          description: Validation failed. `details` maps `authorName`, `relationship` or `message` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /memorials/{slug}/offerings:
+    post:
+      summary: Light a candle or leave a flower
+      operationId: createOffering
+      description: |
+        Increments the memorial's flower or candle counter. Limited to 20 offerings per memorial per visitor
+        (IP address) per day.
+      security:
+        - {}
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfferingRequest' }
+      responses:
+        '200':
+          description: The new totals.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OfferingResult' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+        '422':
+          description: Validation failed. `details.kind` holds the message.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /me/memorials:
+    get:
+      summary: The signed-in user's memorials
+      operationId: listMyMemorials
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Memorials owned by the user, newest first, published or not.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OwnedMemorial' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      summary: Create a memorial
+      operationId: createMemorial
+      description: |
+        Creates an unpublished memorial with an empty biography, timeline and photos and zero flowers and
+        candles. The slug is derived from the name and made unique (`grace-nyathi`, `grace-nyathi-2`, ...);
+        it never changes afterwards.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewMemorial' }
+      responses:
+        '201':
+          description: The new memorial.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnedMemorial' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422':
+          description: |
+            Validation failed. `details` maps `name`, `born`, `died`, `tagline` or `location` to messages.
+            Dates must be real `YYYY-MM-DD` dates, and `died` cannot be before `born` or in the future.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /me/memorials/{id}:
+    get:
+      summary: One of the user's memorials
+      operationId: getMyMemorial
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+      responses:
+        '200':
+          description: The memorial with moderation counts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnedMemorial' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+    patch:
+      summary: Update a memorial
+      operationId: updateMemorial
+      description: |
+        Only the fields present are changed. `timeline` replaces the whole list and is stored sorted by year.
+        The slug never changes, even when the name does. Publishing has no preconditions. Sending an empty
+        `tagline` or `location` removes it.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemorialUpdate' }
+      responses:
+        '200':
+          description: The updated memorial.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnedMemorial' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+        '422':
+          description: |
+            Validation failed. `details` is keyed by field (`name`, `born`, `died`, `tagline`, `location`,
+            `biography`, `timeline`, `service`, `portraitId`, `published`); for `timeline` and `service` it holds
+            one message for the whole value. `portraitId` must be the id of one of the memorial's photos, or null.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+    delete:
+      summary: Delete a memorial
+      operationId: deleteMemorial
+      description: Permanently removes the memorial, its photos and its tributes, and frees the slug.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+      responses:
+        '204':
+          description: Deleted.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+
+  /me/memorials/{id}/photos:
+    post:
+      summary: Add a photo
+      operationId: addMemorialPhoto
+      description: |
+        **Interim.** The photo travels as a base64 `data:` URL inside JSON, and the server stores it as the
+        photo's `url`. A production API should accept `multipart/form-data` (or a pre-signed upload to object
+        storage), validate and resize the image, scan it, and return a hosted URL instead.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewPhoto' }
+      responses:
+        '201':
+          description: The stored photo.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemorialPhoto' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+        '422':
+          description: |
+            Code `photo_limit` when the memorial already holds 8 photos, or `validation_failed` with
+            `details.dataUrl` (not a JPEG, PNG, WebP or SVG data URL, or over about 1.5 MB) or `details.caption`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /me/memorials/{id}/photos/{photoId}:
+    patch:
+      summary: Change a photo's caption
+      operationId: updateMemorialPhoto
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+        - $ref: '#/components/parameters/PhotoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [caption]
+              properties:
+                caption:
+                  type: string
+                  maxLength: 140
+                  description: An empty string removes the caption.
+      responses:
+        '200':
+          description: The updated photo.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemorialPhoto' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: Code `not_found`. No such memorial (or it is not yours), or no such photo on it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Validation failed. `details.caption` holds the message.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+    delete:
+      summary: Remove a photo
+      operationId: deleteMemorialPhoto
+      description: Clears the memorial's `portraitId` if it pointed at this photo.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+        - $ref: '#/components/parameters/PhotoId'
+      responses:
+        '204':
+          description: Removed.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: Code `not_found`. No such memorial (or it is not yours), or no such photo on it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /me/memorials/{id}/tributes:
+    get:
+      summary: Tributes awaiting or past moderation
+      operationId: listMemorialTributesForOwner
+      description: Every tribute except `removed` ones, newest first, whatever its status.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+      responses:
+        '200':
+          description: Pending and approved tributes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tribute' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/MemorialNotFound' }
+
+  /me/memorials/{id}/tributes/{tributeId}:
+    patch:
+      summary: Approve or remove a tribute
+      operationId: moderateTribute
+      description: |
+        `approved` publishes a pending tribute. `removed` takes it down from the public wall and from the
+        owner's list; it cannot be undone through the API.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MemorialId'
+        - name: tributeId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [approved, removed]
+      responses:
+        '200':
+          description: The updated tribute.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tribute' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: Code `not_found`. No such memorial (or it is not yours), or no such (or already removed) tribute.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Validation failed. `details.status` holds the message.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
 components:
   securitySchemes:
     cookieAuth:
@@ -354,9 +722,40 @@ components:
       name: sid
       description: Opaque session id set by `/auth/signin` and `/auth/signup`. `httpOnly`, `SameSite=Lax`.
 
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      description: The memorial's public address, `Memorial.slug`.
+      schema: { type: string, examples: [grace-nyathi] }
+    MemorialId:
+      name: id
+      in: path
+      required: true
+      description: '`Memorial.id`.'
+      schema: { type: string, examples: [m-1] }
+    PhotoId:
+      name: photoId
+      in: path
+      required: true
+      schema: { type: string, examples: [p-1] }
+
   responses:
     Unauthenticated:
       description: Code `unauthenticated`. No session cookie, or it has expired. The app signs the user out.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    MemorialNotFound:
+      description: |
+        Code `not_found`. No such memorial, or (on `/memorials/{slug}`) it is unpublished and the caller is not
+        its owner, or (on `/me/memorials/{id}`) it belongs to someone else. Never `403`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RateLimited:
+      description: Code `rate_limited`. Too many requests from this visitor; try again later.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -602,6 +1001,173 @@ components:
         contactPreference:
           type: string
           enum: [call, whatsapp, sms]
+
+    MemorialPhoto:
+      type: object
+      required: [id, url]
+      properties:
+        id: { type: string, examples: [p-1] }
+        url:
+          type: string
+          description: An image URL. The interim upload stores a `data:` URL here; production returns a hosted URL.
+        caption: { type: string, maxLength: 140 }
+
+    TimelineEntry:
+      type: object
+      required: [id, year, title]
+      properties:
+        id: { type: string, description: Client-generated, unique within the memorial. }
+        year: { type: integer, minimum: 1800, description: Up to and including the current year. }
+        title: { type: string, minLength: 1, maxLength: 80 }
+        text: { type: string, maxLength: 300 }
+
+    ServiceDetails:
+      type: object
+      required: [date, venue]
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: When the funeral or memorial service takes place, with a UTC offset.
+        venue: { type: string, minLength: 1, maxLength: 120 }
+        address: { type: string, maxLength: 200 }
+        note: { type: string, maxLength: 500 }
+
+    Memorial:
+      type: object
+      description: A remembrance page. The owner's identity is never part of it.
+      required: [id, slug, name, born, died, biography, timeline, photos, published, flowers, candles, createdAt]
+      properties:
+        id: { type: string, examples: [m-1] }
+        slug:
+          type: string
+          description: URL-safe name used in the public address, `/memorials/<slug>`. Unique, and never changes.
+          examples: [grace-nyathi]
+        name: { type: string, minLength: 1, maxLength: 80 }
+        born: { type: string, format: date }
+        died: { type: string, format: date }
+        tagline: { type: string, maxLength: 120 }
+        location: { type: string, maxLength: 80 }
+        biography:
+          type: string
+          maxLength: 6000
+          description: Paragraphs separated by a blank line.
+        timeline:
+          type: array
+          maxItems: 20
+          description: Sorted by year.
+          items: { $ref: '#/components/schemas/TimelineEntry' }
+        photos:
+          type: array
+          maxItems: 8
+          items: { $ref: '#/components/schemas/MemorialPhoto' }
+        portraitId:
+          type: string
+          description: The `id` of the photo shown as the portrait. Absent when none is chosen.
+        service: { $ref: '#/components/schemas/ServiceDetails' }
+        published:
+          type: boolean
+          description: Unpublished memorials are visible to their owner only.
+        flowers: { type: integer, minimum: 0 }
+        candles: { type: integer, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+
+    OwnedMemorial:
+      description: What the owner sees, a memorial plus its moderation counts.
+      allOf:
+        - $ref: '#/components/schemas/Memorial'
+        - type: object
+          required: [tributeCount, pendingTributes]
+          properties:
+            tributeCount:
+              type: integer
+              description: Approved tributes, the ones the public sees.
+            pendingTributes:
+              type: integer
+              description: Tributes waiting for the owner's decision.
+
+    Tribute:
+      type: object
+      required: [id, authorName, message, createdAt, status]
+      properties:
+        id: { type: string }
+        authorName: { type: string, maxLength: 60 }
+        relationship: { type: string, maxLength: 60, examples: [Neighbour] }
+        message: { type: string, minLength: 1, maxLength: 500 }
+        createdAt: { type: string, format: date-time }
+        status:
+          type: string
+          enum: [approved, pending, removed]
+
+    NewMemorial:
+      type: object
+      required: [name, born, died]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        born: { type: string, format: date }
+        died:
+          type: string
+          format: date
+          description: Not before `born` and not in the future.
+        tagline: { type: string, maxLength: 120 }
+        location: { type: string, maxLength: 80 }
+
+    MemorialUpdate:
+      type: object
+      description: Every field is optional; only those present are changed.
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        born: { type: string, format: date }
+        died: { type: string, format: date }
+        tagline: { type: string, maxLength: 120 }
+        location: { type: string, maxLength: 80 }
+        biography: { type: string, maxLength: 6000 }
+        timeline:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/TimelineEntry' }
+        published: { type: boolean }
+        portraitId:
+          type: [string, 'null']
+          description: The id of one of the memorial's photos, or `null` to clear it.
+        service:
+          description: '`null` clears the service details.'
+          oneOf:
+            - $ref: '#/components/schemas/ServiceDetails'
+            - type: 'null'
+
+    NewTribute:
+      type: object
+      required: [authorName, message]
+      properties:
+        authorName: { type: string, minLength: 1, maxLength: 60 }
+        relationship: { type: string, maxLength: 60 }
+        message: { type: string, minLength: 1, maxLength: 500 }
+
+    NewPhoto:
+      type: object
+      required: [dataUrl]
+      properties:
+        dataUrl:
+          type: string
+          pattern: '^data:image/(jpeg|png|webp|svg\+xml)'
+          description: A JPEG, PNG, WebP or SVG image as a `data:` URL, at most about 1.5 MB. Interim; see the endpoint.
+        caption: { type: string, maxLength: 140 }
+
+    OfferingRequest:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [flower, candle]
+
+    OfferingResult:
+      type: object
+      required: [flowers, candles]
+      properties:
+        flowers: { type: integer }
+        candles: { type: integer }
 
     Problem:
       type: object

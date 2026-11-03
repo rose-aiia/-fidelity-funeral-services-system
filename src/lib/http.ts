@@ -99,3 +99,5 @@ export const post = <T>(path: string, body: unknown, options: RequestOptions = {
 
 export const patch = <T>(path: string, body: unknown, options: RequestOptions = {}) =>
   request<T>('PATCH', path, body, options)
+
+export const del = (path: string, options: RequestOptions = {}) => request<void>('DELETE', path, undefined, options)

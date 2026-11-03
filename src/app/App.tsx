@@ -20,6 +20,9 @@ const DashboardPage = lazy(() => import('@/features/account/DashboardPage'))
 const PolicyPage = lazy(() => import('@/features/account/PolicyPage'))
 const RequestsPage = lazy(() => import('@/features/account/RequestsPage'))
 const ProfilePage = lazy(() => import('@/features/account/ProfilePage'))
+const MemorialPage = lazy(() => import('@/features/memorials/MemorialPage'))
+const MemorialsPage = lazy(() => import('@/features/memorials/MemorialsPage'))
+const MemorialEditorPage = lazy(() => import('@/features/memorials/MemorialEditorPage'))
 
 export function App() {
   return (
@@ -31,6 +34,7 @@ export function App() {
             <Routes>
               <Route element={<HomeLayout />}>
                 <Route index element={<HomePage />} />
+                <Route path={`${paths.memorials}/:slug`} element={<MemorialPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
 
@@ -44,6 +48,8 @@ export function App() {
                   <Route path={paths.account} element={<DashboardPage />} />
                   <Route path={paths.accountPolicy} element={<PolicyPage />} />
                   <Route path={paths.accountRequests} element={<RequestsPage />} />
+                  <Route path={paths.accountMemorials} element={<MemorialsPage />} />
+                  <Route path={`${paths.accountMemorials}/:id`} element={<MemorialEditorPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />
                 </Route>
               </Route>

@@ -96,6 +96,49 @@ and the code `123456`:
 Any other valid number can sign up (it is accepted with the same code). State is in memory and resets when
 the mock restarts.
 
+## Memorials
+
+Public remembrance pages (biography, timeline, photos, virtual flowers and candles, a tribute wall). The
+contract is in `openapi.yaml`; the mock implements all of it, with state in memory. Try it with
+`+263771234567` (owns the published sample `/memorials/grace-nyathi`, which has one tribute awaiting approval).
+
+| Endpoint | Purpose | Notable errors |
+| --- | --- | --- |
+| `GET /memorials/{slug}`, `GET .../tributes` | Public page and approved tributes | 404 `not_found` |
+| `POST .../tributes` | Leave a tribute (201, `pending` for visitors, `approved` for the owner) | 404, 422, 429 `rate_limited` |
+| `POST .../offerings` | Flower or candle, returns the new totals | 404, 422, 429 `rate_limited` |
+| `GET`, `POST /me/memorials` | List (newest first) and create (unpublished) | 401, 422 |
+| `GET`, `PATCH`, `DELETE /me/memorials/{id}` | Read, edit (including `published`) or delete | 401, 404, 422 |
+| `POST`, `PATCH`, `DELETE /me/memorials/{id}/photos[/{photoId}]` | Add, caption, remove photos | 404, 422 `photo_limit` |
+| `GET /me/memorials/{id}/tributes`, `PATCH .../{tributeId}` | Moderation queue; set `approved` or `removed` | 404, 422 |
+
+- **Visibility.** `GET /memorials/{slug}` and its sub-resources work without a session. An unpublished
+  memorial is visible only to its owner (a valid `sid` cookie is optional on the public routes and just
+  identifies them). For anyone else it answers `404 not_found`, the same as a slug that doesn't exist, so
+  drafts can't be discovered. On `/me/memorials/{id}` another user's memorial is also `404`, never `403`.
+  The owner's identity is never in a response; `Memorial` carries no `ownerId`.
+- **Moderation.** A visitor's tribute is stored `pending` and only shows publicly after the owner sets it to
+  `approved`. The owner's own tributes are `approved` straight away. `removed` is final: the tribute leaves
+  both lists and can't be changed again (keep the row server-side for audit if you need to).
+- **Rate limits** answer `429` with code `rate_limited`: 5 tributes per memorial per visitor per hour, and 20
+  offerings per memorial per visitor per day. The mock keys on the client IP in memory. A real backend should
+  key on a trusted client IP (not a spoofable `X-Forwarded-For`) and/or a visitor cookie, and add a
+  CAPTCHA or similar if tribute spam appears.
+- **Photo upload is interim.** `POST .../photos` takes a base64 `data:` URL in JSON (JPEG, PNG, WebP or SVG,
+  about 1.5 MB at most, 8 photos per memorial) and stores it as the photo's `url`. That is only fit for the
+  mock. Production needs multipart or pre-signed uploads to object storage, server-side resizing and
+  re-encoding (strip EXIF and GPS), content scanning for malware and abusive images, size and type checks on
+  the bytes rather than the declared type, and a hosted CDN `url` in the response. Treat SVG as untrusted
+  (sanitise it, or drop it from the allowed types).
+- **Abuse and safety.**
+  - Tributes are plain text; escape on render and never trust `message`.
+  - The family needs a takedown path beyond the API: a way for them (or the funeral home) to unpublish or
+    delete a memorial and remove any tribute quickly, plus a way for the public to report one.
+  - Unpublished memorials must not be indexed: don't list them anywhere public, leave them out of the
+    sitemap, and send `noindex` on their pages. Consider `noindex` for published ones too unless the family
+    opts in to search visibility.
+  - Memorials of private individuals are sensitive: audit who creates, edits and removes them.
+
 ## What the backend must do
 
 - **Own the price.** `POST /quote-requests` receives choices only and returns the authoritative

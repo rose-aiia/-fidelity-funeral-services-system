@@ -35,3 +35,21 @@ export function ordinal(n: number): string {
   const suffix = ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'
   return `${n}${suffix}`
 }
+
+const dayFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+/** Formats a calendar day (`YYYY-MM-DD`) without letting the viewer's timezone shift it by one. */
+export const formatDay = (isoDay: string) => dayFormat.format(new Date(`${isoDay.slice(0, 10)}T00:00:00Z`))
+
+const dateTimeFormat = new Intl.DateTimeFormat('en-GB', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: 'Africa/Harare',
+})
+
+/** "Wednesday, 10 September, 10:00" in Zimbabwe time, whatever the viewer's timezone. */
+export const formatServiceTime = (iso: string) => dateTimeFormat.format(new Date(iso))

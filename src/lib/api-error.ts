@@ -25,6 +25,10 @@ const KNOWN_CODES: Record<string, string> = {
   account_not_found: 'We couldn’t find an account for that number. You can create one in a minute.',
   account_exists: 'There is already an account for that number. Try signing in instead.',
   locked_out: 'Too many attempts. For your security, please wait a few minutes and try again.',
+  rate_limited: 'You’re doing that a little too quickly. Please wait a moment and try again.',
+  storage_full: 'There isn’t room left in this demo to store that. Try removing a photo first.',
+  photo_limit: 'This memorial already has the maximum number of photos.',
+  not_found: 'We couldn’t find that. It may have been removed.',
   policy_not_found: 'We couldn’t match those details to a policy. Please check the policy number and ID number.',
 }
 

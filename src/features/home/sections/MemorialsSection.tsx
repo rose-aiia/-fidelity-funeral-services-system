@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom'
 import { Icon } from '@/components/ui/Icon'
 import { Section } from '@/components/ui/Section'
 import { SectionHead } from '@/components/ui/SectionHead'
+import { memorialPath } from '@/config/routes'
 
 export function MemorialsSection() {
   return (
@@ -39,6 +41,9 @@ export function MemorialsSection() {
           <p className="muted">
             Sample memorial content is clearly labelled as a demonstration of a digital remembrance experience.
           </p>
+          <Link className="btn btn--dark btn--sm" to={memorialPath('grace-nyathi')}>
+            See an example memorial
+          </Link>
         </article>
       </div>
     </Section>

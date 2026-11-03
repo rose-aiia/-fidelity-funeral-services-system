@@ -6,11 +6,21 @@ export const paths = {
   account: '/account',
   accountPolicy: '/account/policy',
   accountRequests: '/account/requests',
+  accountMemorials: '/account/memorials',
+  accountMemorialNew: '/account/memorials/new',
   accountProfile: '/account/profile',
+  memorials: '/memorials',
 } as const
 
 /** Link to a section of the home page, e.g. `anchor('plans')` -> `/#plans`. */
 export const anchor = (id: string) => `/#${id}`
+
+/** The public page of a memorial. */
+export const memorialPath = (slug: string) => `${paths.memorials}/${slug}`
+
+/** The owner's editor for a memorial, optionally on a tab (`story`, `photos`, ...). */
+export const accountMemorialPath = (id: string, tab?: string) =>
+  `${paths.accountMemorials}/${id}${tab ? `?tab=${tab}` : ''}`
 
 /** Document title per route; unknown paths fall back to the not-found title. */
 export const pageTitles: Record<string, string> = {
@@ -21,7 +31,21 @@ export const pageTitles: Record<string, string> = {
   [paths.account]: 'My account | Zimbabwe Funeral Service',
   [paths.accountPolicy]: 'My policy | Zimbabwe Funeral Service',
   [paths.accountRequests]: 'My requests | Zimbabwe Funeral Service',
+  [paths.accountMemorials]: 'My memorials | Zimbabwe Funeral Service',
+  [paths.accountMemorialNew]: 'Create a memorial | Zimbabwe Funeral Service',
   [paths.accountProfile]: 'Profile | Zimbabwe Funeral Service',
 }
 
 export const NOT_FOUND_TITLE = 'Page not found | Zimbabwe Funeral Service'
+
+/** Routes whose title depends on the page content; the page sets the precise title itself once it loads. */
+const dynamicTitles: [prefix: string, title: string][] = [
+  [`${paths.memorials}/`, 'In memory | Zimbabwe Funeral Service'],
+  [`${paths.accountMemorials}/`, 'Edit memorial | Zimbabwe Funeral Service'],
+]
+
+export function titleFor(pathname: string): string {
+  const exact = pageTitles[pathname]
+  if (exact) return exact
+  return dynamicTitles.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? NOT_FOUND_TITLE
+}

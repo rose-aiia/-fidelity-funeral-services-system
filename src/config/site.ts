@@ -25,12 +25,12 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Overview', to: paths.account, icon: 'home', end: true },
   { label: 'My policy', to: paths.accountPolicy, icon: 'shield' },
   { label: 'Requests', to: paths.accountRequests, icon: 'chat' },
+  { label: 'Memorials', to: paths.accountMemorials, icon: 'flower' },
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
 ]
 
 /** Parts of the account that are designed but not built yet; shown so the product direction is visible. */
 export const accountComingSoon: { label: string; icon: IconName; preview: string }[] = [
-  { label: 'Memorials', icon: 'flower', preview: anchor('memorials') },
   { label: 'Marketplace', icon: 'bag', preview: anchor('marketplace') },
 ]
 

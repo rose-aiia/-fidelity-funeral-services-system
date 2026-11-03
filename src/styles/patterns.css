@@ -180,4 +180,39 @@
 
   .btn .icon { transition: transform var(--duration) var(--ease); }
   .btn:hover .icon:last-child { transform: translateX(2px); }
+
+  /* ---- Celebration and empty states ---- */
+
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .celebrate {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--color-success-tint);
+    border: 1px solid var(--color-success);
+    animation: rise var(--duration-slow) var(--ease-out) both;
+  }
+
+  .celebrate__title { font-family: var(--font-serif); font-size: var(--text-xl); font-weight: 600; color: var(--color-heading); }
+  .celebrate p:not(.celebrate__title) { font-size: var(--text-sm); color: var(--color-text); }
+  .celebrate__mark {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background: var(--color-success);
+    color: var(--white);
+    animation: pop 600ms var(--ease-out) 150ms both;
+  }
+  .empty { display: grid; justify-items: start; gap: var(--space-3); }
+  .empty--large { justify-items: center; text-align: center; padding-block: var(--space-7); }
 }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { NOT_FOUND_TITLE, pageTitles } from '@/config/routes'
+import { titleFor } from '@/config/routes'
 
 /**
  * Router side effects:
@@ -19,7 +19,7 @@ export function RouteEffects() {
   }, [location.hash, navigate])
 
   useEffect(() => {
-    document.title = pageTitles[location.pathname] ?? NOT_FOUND_TITLE
+    document.title = titleFor(location.pathname)
   }, [location.pathname])
 
   useEffect(() => {

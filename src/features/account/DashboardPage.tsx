@@ -4,6 +4,7 @@ import { QueryState } from '@/components/ui/QueryState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { paths } from '@/config/routes'
 import { useAuth } from '@/features/auth'
+import { MemorialsSummaryCard } from '@/features/memorials'
 import { greeting, statusDisplay } from './cover'
 import { ComingSoon, NextActions, NoPolicyCard } from './DashboardPanels'
 import { LinkedCelebration } from './LinkedCelebration'
@@ -114,6 +115,9 @@ export default function DashboardPage() {
             <NextActions hasPolicy={Boolean(policy)} />
           </div>
           <div className="reveal" style={{ '--i': 4 } as React.CSSProperties}>
+            <MemorialsSummaryCard />
+          </div>
+          <div className="reveal" style={{ '--i': 5 } as React.CSSProperties}>
             <ComingSoon />
           </div>
         </div>

@@ -58,7 +58,7 @@ export function ComingSoon() {
           </span>
           <span>
             <strong>{item.label}</strong>
-            <span>{item.label === 'Memorials' ? 'Tributes, flowers and life stories.' : 'Flowers, plaques and services.'}</span>
+            <span>Flowers, plaques and services.</span>
           </span>
           <span className="soon__tag">
             <Icon name="lock" size={12} /> Soon

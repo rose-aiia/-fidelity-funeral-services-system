@@ -1,63 +1,69 @@
-# Fidelity Funeral Services – frontend prototype
+# Fidelity Funeral Services
 
-React 19 + TypeScript + Vite prototype of a funeral-services site: plans and quotes, memorials, marketplace, FAQ and a provider portal concept. All content is sample data.
+A digital home for families in Zimbabwe and the diaspora when they lose someone. It brings funeral planning, cover, burial arrangements, remembrance and aftercare into one place, so a grieving family has one place to go instead of many phone calls.
 
-```bash
-npm run dev      # start the dev server
-npm run build    # type-check and build
-npm run lint     # oxlint
-npm test         # vitest (unit tests)
-```
+> This is a sample prototype. All plans, prices, policies, people and memorials in it are made up.
 
-## Customer accounts and demo mode
+![Landing page of Fidelity Funeral Services](docs/screenshots/landing-page.png)
 
-Customers sign in with their mobile number and a one-time code (`/login`, `/signup`), optionally link an existing policy, and land in `/account`: overview, policy, requests and profile. The provider portal (`/provider-portal`) now needs a provider, staff or admin sign-in.
+## Who it is for
 
-In the default `mock` mode everything runs in the browser, and `/login` shows **demo personas** for one-click sign-in (a policyholder, a new family and provider staff). The one-time code is always `123456`. To link a policy by hand, use `FLA-318227` with ID `08-765432-B-15`. Accounts, links and requests are kept in `localStorage`.
+- **Families who need help now**: someone has just passed away and they need to know what to do next.
+- **People planning ahead**: comparing funeral plans for themselves or their family.
+- **Policyholders**: checking their cover and asking for help, such as making a claim.
+- **Relatives and friends**: remembering a loved one and leaving a tribute, wherever they live.
+- **Funeral professionals**: managing the services they deliver for families.
 
-With `VITE_API_MODE=live` the same screens talk to the API in [`docs/openapi.yaml`](docs/openapi.yaml); `npm run mock-api` is a reference server for it (see [`docs/backend-integration.md`](docs/backend-integration.md)). The personas are hidden in live mode.
+## What families can do
 
-Feature layout: `features/auth` is the session (types, API calls, route guard, hooks) and `features/account` is everything a signed-in customer sees. Other features import auth through `@/features/auth`.
+### Get help straight away
 
-## Code structure
+The first thing on the page is a way to reach a funeral care adviser. Urgent arrangements, transport, repatriation questions and cemetery guidance all start from here.
 
-```text
-src/
-  app/          App shell: router, route effects (scroll, title), error boundary, 404
-  components/   Shared, feature-agnostic UI (layout/ = header, footer, shells; ui/ = small widgets)
-  config/       Site-wide constants: route paths, navigation, titles
-  features/     One folder per product area. Each owns its components, data, logic and CSS
-  lib/          Pure helpers (formatting)
-  styles/       Design system: tokens, base, layout, shared components
-```
+### Choose a funeral plan
 
-- Import across folders with the `@/` alias (`@/components/ui/Section`); use `./` only within a folder.
-- Features don't reach into each other's internals (only `features/home` composes the other features' section components into the page). Shared pieces move up into `components/`.
-- Data and business logic (`data.ts`, `pricing.ts`, `api.ts`) stay out of components so they can be tested and replaced. `features/plans/api.ts` is the seam for a real quote endpoint.
-- The provider portal and the customer account pages are lazy-loaded routes.
+Compare three plans (**Essential**, **Comfort** and **Legacy**), see what each one covers, and request a quote that fits the family's size and wishes.
 
-## Design system
+### Find a burial place
 
-CSS is organised in cascade layers, declared once in `src/index.css`:
+Search cemeteries by town or area, compare plot guidance and send an enquiry about a grave.
 
-```text
-tokens → base → layout → components → features
-```
+### Bring someone home
 
-A later layer always beats an earlier one, so there are no specificity fights and file import order does not matter.
+Repatriation support for families abroad: an overview of the journey, transport and the documents needed to arrange a funeral across borders.
 
-| Layer | Where | Contains |
-| --- | --- | --- |
-| `tokens` | `styles/tokens.css` | Palette and semantic tokens, spacing, type, radius, shadow, motion, z-index |
-| `base` | `styles/base.css` | Reset, typography, `.container`, `.section`, `.stack`, `.muted` |
-| `layout` | `styles/layout.css` | Header, mobile drawer, footer |
-| `components` | `styles/components.css` | `.btn`, `.badge`, `.card`, `.icon-tile`, `.split`, `.grid`, forms, chip, accordion, stat card, toast |
-| `features` | `features/*/*.css` | Styles specific to one feature, imported by that feature's components |
+### Remember a loved one
 
-Rules:
+Create an online memorial with their life story and photographs. Keep it private until it is ready, then publish and share the link. Visitors can leave flowers, light a candle and write a tribute, and the family reads every tribute before it is shown.
 
-1. **Components use semantic tokens only** (`--color-accent`, `--color-surface`, `--space-4`), never palette values (`--red-500`) and never raw hex/px colours. To re-theme, change the semantic tier in `tokens.css`.
-2. **Reuse a primitive before writing a new class.** A card is `card` plus modifiers (`card--interactive`, `stack`), not a new bespoke block. Feature CSS only adds what is genuinely unique.
-3. **Vary a primitive with custom properties**, e.g. `--card-pad`, `--stack-gap`, `--outline-color`, rather than overriding its rules.
-4. Anchored sections get `scroll-margin-top` from the header height token, so new `id`s need no extra work.
-5. Class names are BEM-style (`block__element--modifier`); one block per component.
+### Arrange everything else
+
+A marketplace of trusted partners for what a funeral needs: headstones and plaques, wreaths, marquee and seating hire, programmes and stationery, and memorial video tributes.
+
+### Stay supported afterwards
+
+Aftercare does not stop at the funeral. Families get guidance on next steps, estate help and ideas for remembrance, including AI-assisted suggestions.
+
+## Your account
+
+Customers sign in with their mobile number and a one-time code, with no password to remember. From their account they can:
+
+- **Link their policy** and see who is covered and for how much.
+- **Ask for help**, for example "a loved one has passed away" or "make a claim", choose how they want to be contacted (phone call, WhatsApp or SMS) and follow the request from *received* to *complete*.
+- **Manage memorials** they have created: story, photos, tributes and sharing.
+- **Keep their profile** up to date.
+
+## For funeral providers
+
+A provider portal, for provider staff and administrators who sign in, shows how funeral professionals could manage the services they run for families.
+
+## Trying the demo
+
+Run `npm install` and then `npm run dev`, and open the address it prints.
+
+- On the sign-in page, pick one of the **demo personas** (a policyholder, a new family or provider staff) to get in with one click.
+- The one-time code is always `123456`.
+- To link a policy by hand, use policy number `FLA-318227` with ID `08-765432-B-15`.
+- Everything you do is saved in your own browser only.
+
+How the app is built, and how to connect it to a real backend, is in [docs/development.md](docs/development.md).
