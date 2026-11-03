@@ -38,7 +38,7 @@ Create an online memorial with their life story and photographs. Keep it private
 
 ### Arrange everything else
 
-A marketplace of trusted partners for what a funeral needs: headstones and plaques, wreaths, marquee and seating hire, programmes and stationery, and memorial video tributes.
+A marketplace of trusted partners for what a funeral needs: headstones and plaques, wreaths, marquee and seating hire, programmes and stationery, and memorial video tributes. Choose options, add personal wording such as an engraving or a card message, pay with EcoCash or Paynow, and follow the order from payment to delivery. From a memorial, "Send flowers" starts an order in that person's memory.
 
 ### Stay supported afterwards
 
@@ -51,6 +51,7 @@ Customers sign in with their mobile number and a one-time code, with no password
 - **Link their policy** and see who is covered and for how much.
 - **Ask for help**, for example "a loved one has passed away" or "make a claim", choose how they want to be contacted (phone call, WhatsApp or SMS) and follow the request from *received* to *complete*.
 - **Manage memorials** they have created: story, photos, tributes and sharing.
+- **Order from the marketplace** and follow each order, with a clear way to try again if a payment fails.
 - **Keep their profile** up to date.
 
 ## For funeral providers
@@ -64,6 +65,7 @@ Run `npm install` and then `npm run dev`, and open the address it prints.
 - On the sign-in page, pick one of the **demo personas** (a policyholder, a new family or provider staff) to get in with one click.
 - The one-time code is always `123456`.
 - To link a policy by hand, use policy number `FLA-318227` with ID `08-765432-B-15`.
+- Payments are simulated. Any 077 or 078 EcoCash number is approved after a few seconds; use `078 000 0000` to see a declined payment.
 - Everything you do is saved in your own browser only.
 
 How the app is built, and how to connect it to a real backend, is in [docs/development.md](docs/development.md).

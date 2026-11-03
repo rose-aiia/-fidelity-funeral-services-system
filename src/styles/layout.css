@@ -138,6 +138,12 @@
     cursor: pointer;
   }
 
+  @media (max-width: 1200px) {
+    .brand__text { font-size: 0.9rem; }
+    .site-nav { gap: var(--space-3); }
+    .site-nav li a { padding-inline: var(--space-2); }
+  }
+
   @media (max-width: 960px) {
     .site-header__inner { gap: var(--space-3); }
     .brand__mark { width: 5.5rem; }

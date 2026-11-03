@@ -18,13 +18,14 @@ const petals = (cx: number, cy: number, r: number, count: number, fill: string, 
 export const plaqueArt = toDataUri(
   frame(
     stops('#d9d2c5', '#b9b0a0'),
-    `<rect x="150" y="110" width="340" height="250" rx="18" fill="#2e2e33"/>
-     <rect x="164" y="124" width="312" height="222" rx="12" fill="none" stroke="#8f8a7d" stroke-width="2"/>
-     <path d="M320 150v34M303 167h34" stroke="#d8c48a" stroke-width="4" stroke-linecap="round"/>
-     <rect x="215" y="214" width="210" height="8" rx="4" fill="#cfc7b2"/>
-     <rect x="245" y="240" width="150" height="6" rx="3" fill="#8f8a7d"/>
-     <rect x="265" y="270" width="110" height="6" rx="3" fill="#8f8a7d"/>
-     <rect x="120" y="360" width="400" height="26" rx="6" fill="#4b4b52"/>`,
+    `<path d="M215 390V200a105 105 0 0 1 210 0V390Z" fill="#2e2e33"/>
+     <path d="M231 380V202a89 89 0 0 1 178 0V380Z" fill="none" stroke="#8f8a7d" stroke-width="2"/>
+     <path d="M320 150v52M298 172h44" stroke="#d8c48a" stroke-width="5" stroke-linecap="round"/>
+     <rect x="262" y="232" width="116" height="8" rx="4" fill="#cfc7b2"/>
+     <rect x="278" y="258" width="84" height="6" rx="3" fill="#8f8a7d"/>
+     <rect x="288" y="284" width="64" height="6" rx="3" fill="#8f8a7d"/>
+     <rect x="180" y="390" width="280" height="30" rx="6" fill="#4b4b52"/>
+     <rect x="150" y="420" width="340" height="22" rx="6" fill="#5b5b63"/>`,
   ),
 )
 

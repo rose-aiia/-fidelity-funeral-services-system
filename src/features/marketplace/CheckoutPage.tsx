@@ -25,6 +25,14 @@ const fieldErrorsFrom = (error: unknown): Errors => {
   return Object.fromEntries(Object.entries(error.details as Record<string, string>).map(([key, message]) => [key.split('.').pop()!, message]))
 }
 
+/** Problems the server found in the basket itself (a missing engraving, an item withdrawn), which no field can show. */
+const basketProblems = (error: unknown): string[] => {
+  if (!(error instanceof ApiError) || typeof error.details !== 'object' || error.details === null) return []
+  return Object.entries(error.details as Record<string, string>)
+    .filter(([key]) => key === 'lines' || key.startsWith('lines.'))
+    .map(([, message]) => message)
+}
+
 export default function CheckoutPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -213,7 +221,9 @@ export default function CheckoutPage() {
             )}
             {create.error instanceof ApiError && create.error.status === 422 && (
               <Callout tone="danger" role="alert">
-                Please check the highlighted details and try again.
+                {basketProblems(create.error).length > 0
+                  ? basketProblems(create.error).join(' ')
+                  : 'Please check the highlighted details and try again.'}
               </Callout>
             )}
 

@@ -13,7 +13,16 @@ npm test         # vitest (unit tests)
 
 With `VITE_API_MODE=live` the screens talk to the API in [`openapi.yaml`](openapi.yaml); `npm run mock-api` is a reference server for it (see [`backend-integration.md`](backend-integration.md)). The demo personas are hidden in live mode.
 
-Feature layout: `features/auth` is the session (types, API calls, route guard, hooks) and `features/account` is everything a signed-in customer sees. Other features import auth through `@/features/auth`.
+Feature layout: `features/auth` is the session (types, API calls, route guard, hooks), `features/account` is the customer's policy and requests, `features/memorials` is the public memorial pages and the owner's editor, and `features/marketplace` is the shop, basket, checkout and orders. Other features import each other only through their `index.ts` (for example `@/features/auth`).
+
+### Marketplace and orders
+
+- **Server-authoritative prices.** The browser sends choices (item, options, quantity, wording), never prices. `pricing.ts` is the one place prices are worked out; the basket and checkout use it for a preview, and the server (or the mock) recomputes the real total when the order is placed.
+- **Shared, pure logic.** `pricing.ts`, `validation.ts`, `order-flow.ts` and `seed` data import only relative `.ts` files, so `scripts/mock-api.mjs` loads them straight from `src/` under Node and the browser mock and the reference server cannot drift apart.
+- **Order lifecycle.** `order-flow.ts` moves an order from `awaiting_payment` to `paid`, `confirmed`, `in_progress` and `delivered`, or to `payment_failed` and back. Time is passed in, so it is easy to test. The page polls an order while its payment is pending or it is in progress.
+- **Mock payments.** In mock mode any 077 or 078 EcoCash number is approved after a few seconds, `078 000 0000` is always declined, and Paynow shows a stand-in for its hosted page. A real integration needs gateway credentials, signed webhooks and idempotency keys (see `backend-integration.md`).
+- **Basket.** `cart.ts` is a small external store backed by `localStorage`, read through `useSyncExternalStore`, so the header button, the drawer and product pages share it without a provider.
+
 
 ## Code structure
 

@@ -39,7 +39,7 @@ export function OrdersSummaryCard() {
           View all <Icon name="arrow-right" size={16} />
         </Link>
       </div>
-      <OrderRow order={data[0]!} />
+      <OrderRow order={data[0]!} bare />
     </section>
   )
 }

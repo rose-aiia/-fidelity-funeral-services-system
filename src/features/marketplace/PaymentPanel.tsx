@@ -75,7 +75,7 @@ function PaynowWaiting({ order }: { order: Order }) {
           {getErrorMessage(resolve.error)}
         </Callout>
       )}
-      <div className="studio-form__actions">
+      <div className="payment-actions">
         <button type="button" className="btn btn--primary" disabled={resolve.isPending} onClick={() => resolve.mutate('paid')}>
           {resolve.isPending ? 'Processing…' : `Pay ${formatUsd(order.payment.amount)}`}
         </button>
@@ -108,7 +108,7 @@ function TryAgain({ order }: { order: Order }) {
       </h2>
       {order.status === 'payment_failed' && (
         <Callout tone="danger" role="alert">
-          {order.payment.failureReason ?? 'The payment didn’t go through.'} Nothing was charged
+          {(order.payment.failureReason ?? 'The payment didn’t go through').replace(/[.]?$/, '.')} Nothing was charged
           {order.payment.ecocashNumber ? ` to ${order.payment.ecocashNumber}` : ''}. Your order is saved, so you can pay again or use another
           method.
         </Callout>

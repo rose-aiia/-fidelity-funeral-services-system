@@ -1,5 +1,4 @@
 import { Callout } from '@/components/ui/Callout'
-import { Icon } from '@/components/ui/Icon'
 import { TextField } from '@/components/ui/TextField'
 import { env } from '@/lib/env'
 import type { PaymentMethod } from './data'
@@ -49,7 +48,7 @@ export function PaymentFields({ method, onMethodChange, ecocashNumber, onEcocash
           />
           {env.useMock && (
             <Callout tone="info">
-              <Icon name="sparkle" size={14} /> Demo mode: any 077 or 078 number is approved after a few seconds. Use 078 000 0000 to see a
+              Demo mode: any 077 or 078 number is approved after a few seconds. Use 078 000 0000 to see a
               declined payment.
             </Callout>
           )}
