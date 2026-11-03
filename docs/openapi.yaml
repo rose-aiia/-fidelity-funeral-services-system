@@ -1,0 +1,617 @@
+openapi: 3.1.0
+info:
+  title: Fidelity funeral services API
+  version: 0.1.0
+  description: |
+    The endpoints the web app calls today. Paths are relative to the API base URL
+    (`VITE_API_BASE_URL`, default `/api`). In development the Vite proxy strips the `/api`
+    prefix, so the backend serves these paths from its root.
+
+    `npm run mock-api` runs a reference implementation of this contract.
+
+    **Accounts.** Customers sign in with a Zimbabwean mobile number and a 6-digit one-time code sent
+    by SMS. A successful `/auth/signin` or `/auth/signup` sets an `httpOnly`, `SameSite=Lax` cookie named
+    `sid` (a production deployment should also set `Secure`). The `/me` endpoints require it and answer
+    `401` with code `unauthenticated` when it is missing or no longer valid. Failed code attempts are
+    counted per phone number and failed policy-link attempts per user; after 5 the server answers `429`
+    with code `locked_out`. National ID numbers held on policy records never leave the server.
+servers:
+  - url: /api
+
+security: []
+
+paths:
+  /plans:
+    get:
+      summary: List funeral plans
+      operationId: listPlans
+      responses:
+        '200':
+          description: Plans in display order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Plan' }
+
+  /marketplace/items:
+    get:
+      summary: List marketplace products and services
+      operationId: listMarketplaceItems
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Optional server-side filter. The app currently fetches everything and filters locally.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Items in display order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceItem' }
+
+  /faqs:
+    get:
+      summary: List frequently asked questions
+      operationId: listFaqs
+      responses:
+        '200':
+          description: Questions in display order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Faq' }
+
+  /quote-requests:
+    post:
+      summary: Submit a quote request
+      operationId: submitQuoteRequest
+      description: |
+        The client sends only the family's choices. The server computes the total itself and
+        returns it; the figure shown in the browser before submitting is a preview, never trusted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuoteRequest' }
+      responses:
+        '201':
+          description: Request accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuoteReceipt' }
+        '422':
+          description: Validation failed. `details` maps field names to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429':
+          description: Rate limited.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/otp:
+    post:
+      summary: Send a one-time sign-in code by SMS
+      operationId: requestOtp
+      description: Used for both sign-in and sign-up. Does not reveal whether an account exists for the number.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { $ref: '#/components/schemas/Phone' }
+      responses:
+        '200':
+          description: Code sent.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OtpReceipt' }
+        '422':
+          description: Not a Zimbabwean mobile number. `details.phone` holds the message.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429':
+          description: Code `locked_out`, after 5 failed code attempts for this number.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/signin:
+    post:
+      summary: Sign in with a phone number and one-time code
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignInRequest' }
+      responses:
+        '200':
+          description: Signed in. Sets the `sid` session cookie.
+          headers:
+            Set-Cookie:
+              description: "`sid=<token>; HttpOnly; Path=/; SameSite=Lax`"
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Code `otp_invalid`. The code is wrong or expired; this counts toward the lockout.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Code `account_not_found`. The code was right but no account uses this number.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Validation failed. `details` maps `phone` / `code` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429':
+          description: Code `locked_out`, after 5 failed code attempts for this number.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/signup:
+    post:
+      summary: Create a customer account
+      operationId: signUp
+      description: The new account always has role `customer` and language `en`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignUpRequest' }
+      responses:
+        '201':
+          description: Account created and signed in. Sets the `sid` session cookie.
+          headers:
+            Set-Cookie:
+              description: "`sid=<token>; HttpOnly; Path=/; SameSite=Lax`"
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Code `otp_invalid`. This counts toward the lockout.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: Code `account_exists`. The number already has an account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Validation failed. `details` maps `name`, `email`, `phone` or `code` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429':
+          description: Code `locked_out`, after 5 failed code attempts for this number.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/signout:
+    post:
+      summary: Sign out
+      operationId: signOut
+      description: Ends the session and clears the cookie. Succeeds even when there is no session.
+      responses:
+        '204':
+          description: Signed out. Clears the `sid` cookie.
+          headers:
+            Set-Cookie:
+              description: "`sid=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`"
+              schema: { type: string }
+
+  /me:
+    get:
+      summary: The signed-in user
+      operationId: getMe
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      summary: Update the signed-in user's profile
+      operationId: updateMe
+      description: The phone number and role cannot be changed here.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdate' }
+      responses:
+        '200':
+          description: The updated user. Omitting `email` (or sending it empty) removes it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422':
+          description: Validation failed. `details` maps `name`, `email` or `language` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /me/policy:
+    get:
+      summary: The user's linked policy
+      operationId: getMyPolicy
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The linked policy.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Policy' }
+        '204':
+          description: No policy is linked to this account yet.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      summary: Link a policy to the account
+      operationId: linkPolicy
+      description: |
+        Proves the person holds the policy by matching the policy number and ID number against the
+        back-office record (case, spaces and punctuation are ignored). Replaces any policy already linked.
+        The ID number is only ever received, never returned.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LinkPolicyRequest' }
+      responses:
+        '200':
+          description: The policy is now linked.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Policy' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422':
+          description: |
+            Code `policy_not_found` when the number and ID don't match a record (counts toward the lockout),
+            or `validation_failed` (`details.policyNumber` / `details.idNumber`) when a field is empty.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429':
+          description: Code `locked_out`, after 5 failed link attempts by this user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /me/requests:
+    get:
+      summary: The user's assistance requests
+      operationId: listMyRequests
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Requests, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AssistanceRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      summary: Ask the funeral home for help
+      operationId: createRequest
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewRequest' }
+      responses:
+        '201':
+          description: Request recorded with status `received`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssistanceRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422':
+          description: |
+            Validation failed. `details` maps `kind`, `contactPreference` or `message` to messages. `message`
+            is capped at 600 characters, and for kind `general` it is required (at least 10 characters).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sid
+      description: Opaque session id set by `/auth/signin` and `/auth/signup`. `httpOnly`, `SameSite=Lax`.
+
+  responses:
+    Unauthenticated:
+      description: Code `unauthenticated`. No session cookie, or it has expired. The app signs the user out.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    Plan:
+      type: object
+      required: [id, name, price, description, features]
+      properties:
+        id: { type: string, examples: [comfort] }
+        name: { type: string, examples: [Comfort] }
+        price:
+          type: integer
+          description: Starting price in whole US dollars.
+          examples: [7800]
+        description: { type: string }
+        features:
+          type: array
+          items: { type: string }
+        popular:
+          type: boolean
+          description: Highlights the plan as "Most chosen".
+
+    MarketplaceItem:
+      type: object
+      required: [id, category, title, description, price, accent]
+      properties:
+        id: { type: string }
+        category: { type: string, examples: [Flowers] }
+        title: { type: string }
+        description: { type: string }
+        price:
+          type: integer
+          description: Price in whole US dollars.
+        accent:
+          type: string
+          description: A decorative glyph shown on the card. Expected to be replaced by an image URL.
+
+    Faq:
+      type: object
+      required: [id, question, answer]
+      properties:
+        id: { type: string }
+        question: { type: string }
+        answer: { type: string }
+
+    QuoteRequest:
+      type: object
+      required: [planId, serviceType, town]
+      properties:
+        planId:
+          type: string
+          description: An `id` from `GET /plans`.
+        serviceType:
+          type: string
+          enum: [Traditional burial, Repatriation support, Cemetery planning, Memorial only]
+        town:
+          type: string
+          enum: [Harare, Bulawayo, Mutare, Gweru, Chitungwiza]
+
+    QuoteReceipt:
+      type: object
+      required: [id, reference, estimatedTotal]
+      properties:
+        id: { type: string }
+        reference:
+          type: string
+          description: Human-readable reference a family can quote by phone.
+          examples: [QR-1001]
+        estimatedTotal:
+          type: integer
+          description: Authoritative total in whole US dollars.
+
+    Phone:
+      type: string
+      description: |
+        A Zimbabwean mobile number in any common form (`0771234567`, `+263 77 123 4567`). The server
+        normalises it to E.164 and rejects anything else.
+      examples: ['+263771234567']
+
+    User:
+      type: object
+      required: [id, name, phone, role, language]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        phone:
+          type: string
+          description: E.164, e.g. `+263771234567`. The sign-in identifier.
+        email: { type: string, format: email }
+        role:
+          type: string
+          enum: [customer, staff, provider, admin]
+          description: The app only uses this to hide screens. Enforce it on the server too.
+        language:
+          type: string
+          enum: [en, sn, nd]
+
+    OtpReceipt:
+      type: object
+      required: [expiresInSeconds]
+      properties:
+        expiresInSeconds: { type: integer, examples: [300] }
+
+    SignInRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone: { $ref: '#/components/schemas/Phone' }
+        code:
+          type: string
+          pattern: '^\d{6}$'
+
+    SignUpRequest:
+      type: object
+      required: [name, phone, code]
+      properties:
+        name: { type: string, minLength: 1 }
+        phone: { $ref: '#/components/schemas/Phone' }
+        code:
+          type: string
+          pattern: '^\d{6}$'
+        email: { type: string, format: email }
+
+    ProfileUpdate:
+      type: object
+      required: [name, language]
+      properties:
+        name: { type: string, minLength: 1 }
+        email: { type: string, format: email }
+        language:
+          type: string
+          enum: [en, sn, nd]
+
+    Beneficiary:
+      type: object
+      required: [name, relationship, share]
+      properties:
+        name: { type: string }
+        relationship: { type: string, examples: [Spouse] }
+        share:
+          type: integer
+          description: Percentage of the benefit. Sums to 100 across a policy.
+
+    PolicyDocument:
+      type: object
+      required: [id, name, sizeKb]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sizeKb: { type: integer }
+
+    Policy:
+      type: object
+      required:
+        - number
+        - planName
+        - holderName
+        - status
+        - coverAmount
+        - monthlyPremium
+        - paymentDay
+        - startDate
+        - monthsPaid
+        - waitingPeriodMonths
+        - beneficiaries
+        - documents
+      properties:
+        number: { type: string, examples: [FLA-204815] }
+        planName: { type: string }
+        holderName: { type: string }
+        status:
+          type: string
+          enum: [active, grace, lapsed]
+        coverAmount:
+          type: integer
+          description: Benefit paid out, whole US dollars.
+        monthlyPremium:
+          type: integer
+          description: Monthly premium, whole US dollars.
+        paymentDay:
+          type: integer
+          minimum: 1
+          maximum: 28
+          description: Day of the month the premium falls due.
+        startDate: { type: string, format: date }
+        monthsPaid: { type: integer }
+        waitingPeriodMonths:
+          type: integer
+          description: Months of premiums before natural-death cover is payable in full.
+        beneficiaries:
+          type: array
+          items: { $ref: '#/components/schemas/Beneficiary' }
+        documents:
+          type: array
+          items: { $ref: '#/components/schemas/PolicyDocument' }
+
+    LinkPolicyRequest:
+      type: object
+      required: [policyNumber, idNumber]
+      properties:
+        policyNumber: { type: string, examples: [FLA-318227] }
+        idNumber:
+          type: string
+          description: The holder's national ID number. Checked against the record and never returned.
+          examples: [08-765432-B-15]
+
+    AssistanceRequest:
+      type: object
+      required: [id, reference, kind, message, contactPreference, status, createdAt]
+      properties:
+        id: { type: string }
+        reference:
+          type: string
+          description: Human-readable reference a family can quote by phone.
+          examples: [AR-1042]
+        kind:
+          type: string
+          enum: [bereavement, claim, general]
+        message: { type: string, maxLength: 600 }
+        contactPreference:
+          type: string
+          enum: [call, whatsapp, sms]
+        status:
+          type: string
+          enum: [received, assigned, in_progress, complete]
+        createdAt: { type: string, format: date-time }
+        assignedTo:
+          type: string
+          description: Name of the adviser handling it, once assigned.
+
+    NewRequest:
+      type: object
+      required: [kind, message, contactPreference]
+      properties:
+        kind:
+          type: string
+          enum: [bereavement, claim, general]
+        message:
+          type: string
+          maxLength: 600
+          description: Required (at least 10 characters) when `kind` is `general`; otherwise may be empty.
+        contactPreference:
+          type: string
+          enum: [call, whatsapp, sms]
+
+    Problem:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. `validation_failed`.
+        message:
+          type: string
+          description: For logs and developers. The app never shows this to users.
+        details:
+          description: Optional structured context, e.g. field-level validation messages.

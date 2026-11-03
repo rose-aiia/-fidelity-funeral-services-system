@@ -1,17 +1,35 @@
 import { useState } from 'react'
+import { QueryState } from '@/components/ui/QueryState'
 import { Section } from '@/components/ui/Section'
 import { SectionHead } from '@/components/ui/SectionHead'
 import { formatUsd } from '@/lib/format'
-import { DEFAULT_PLAN_ID, plans } from './data'
+import { DEFAULT_PLAN_ID, type Plan } from './data'
+import { usePlans } from './queries'
 import { QuoteForm } from './QuoteForm'
 import './plans.css'
 
 export function PlansSection() {
-  const [selectedPlanId, setSelectedPlanId] = useState(DEFAULT_PLAN_ID)
-  const activePlan = plans.find((plan) => plan.id === selectedPlanId) ?? plans[0]
+  const { data: plans, isPending, error, refetch } = usePlans()
 
   return (
     <Section id="plans" containerClassName="split">
+      {plans ? (
+        <PlansContent plans={plans} />
+      ) : (
+        <QueryState isPending={isPending} error={error} onRetry={() => void refetch()} noun="plans" skeleton />
+      )}
+    </Section>
+  )
+}
+
+function PlansContent({ plans }: { plans: Plan[] }) {
+  const [selectedPlanId, setSelectedPlanId] = useState(DEFAULT_PLAN_ID)
+  const activePlan = plans.find((plan) => plan.id === selectedPlanId) ?? plans[0]
+
+  if (!activePlan) return <p className="muted">No plans are available right now. Please check back soon.</p>
+
+  return (
+    <>
       <div>
         <SectionHead eyebrow="Funeral plans" title="Sample plans and quotation guidance." align="left" />
 
@@ -47,6 +65,6 @@ export function PlansSection() {
       </div>
 
       <QuoteForm plan={activePlan} />
-    </Section>
+    </>
   )
 }

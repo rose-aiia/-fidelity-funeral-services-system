@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Toast } from '@/components/ui/Toast'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatUsd } from '@/lib/format'
-import { submitQuoteRequest } from './api'
+import { submitQuoteRequest, type QuoteReceipt } from './api'
 import type { Plan } from './data'
 import { estimateTotal, SERVICE_TYPES, TOWNS, type ServiceType, type Town } from './pricing'
 
@@ -13,6 +14,8 @@ export function QuoteForm({ plan }: { plan: Plan }) {
   const [serviceType, setServiceType] = useState<ServiceType>(SERVICE_TYPES[0])
   const [town, setTown] = useState<Town>(TOWNS[0])
   const [status, setStatus] = useState<Status>('idle')
+  const [receipt, setReceipt] = useState<QuoteReceipt | null>(null)
+  const [error, setError] = useState<unknown>(null)
 
   const estimatedTotal = estimateTotal(plan, town, serviceType)
 
@@ -26,9 +29,10 @@ export function QuoteForm({ plan }: { plan: Plan }) {
     event.preventDefault()
     setStatus('submitting')
     try {
-      await submitQuoteRequest({ planId: plan.id, serviceType, town, estimatedTotal })
+      setReceipt(await submitQuoteRequest({ planId: plan.id, serviceType, town }))
       setStatus('success')
-    } catch {
+    } catch (err) {
+      setError(err)
       setStatus('error')
     }
   }
@@ -74,10 +78,13 @@ export function QuoteForm({ plan }: { plan: Plan }) {
         </button>
       </form>
 
-      {status === 'success' && (
-        <Toast>Sample enquiry submitted. A provider adviser would follow up with a formal quotation.</Toast>
+      {status === 'success' && receipt && (
+        <Toast>
+          Sample enquiry submitted (reference {receipt.reference}). A provider adviser would follow up with a formal
+          quotation.
+        </Toast>
       )}
-      {status === 'error' && <Toast>We couldn’t send your enquiry. Please try again.</Toast>}
+      {status === 'error' && <Toast>{getErrorMessage(error)}</Toast>}
     </aside>
   )
 }

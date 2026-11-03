@@ -1,0 +1,246 @@
+/* Chrome for the signed-in area and the sign-in screens. Page content styles live in features/account. */
+@layer layout {
+  /* ---- Account shell ---- */
+
+  .account-shell { background: var(--color-bg); }
+
+  .account-header__site { white-space: nowrap; }
+
+  .account-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-2);
+    color: var(--color-on-inverse);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .account-frame {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: clamp(24px, 3.5vw, 48px);
+    align-items: start;
+    padding-block: clamp(24px, 4vw, 44px) var(--section-pad);
+  }
+
+  .account-side {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-5));
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .account-nav { display: grid; gap: var(--space-1); }
+
+  .account-nav__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 46px;
+    padding: 10px var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
+  }
+
+  .account-nav__link:hover { background: var(--color-hover-tint); color: var(--color-heading); }
+
+  .account-nav__link[aria-current='page'] {
+    background: var(--color-surface);
+    color: var(--color-accent-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .account-nav__link[aria-current='page'] .icon { color: var(--color-accent); }
+
+  .account-nav__heading {
+    margin: var(--space-5) 0 var(--space-2) var(--space-3);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .account-nav__link--soon { font-weight: 500; }
+
+  .account-nav__soon {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-highlight-tint);
+    color: var(--color-highlight-strong);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .account-help {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-inverse);
+    color: var(--color-on-inverse-muted);
+    font-size: var(--text-sm);
+  }
+
+  .account-help__title { font-family: var(--font-serif); font-size: var(--text-lg); color: var(--white); }
+  .account-help .btn { margin-top: var(--space-2); }
+
+  .account-main { min-width: 0; }
+
+  .account-skeleton { display: grid; gap: var(--space-5); }
+  .account-skeleton__hero { border-radius: var(--radius-lg); }
+
+  /* ---- Mobile tab bar ---- */
+
+  .account-tabbar { display: none; }
+
+  @media (max-width: 900px) {
+    .account-frame { grid-template-columns: minmax(0, 1fr); padding-bottom: calc(var(--tabbar-h) + var(--space-6)); }
+    .account-side { display: none; }
+    .account-user__name { display: none; }
+
+    .account-tabbar {
+      position: fixed;
+      inset: auto 0 0 0;
+      z-index: var(--z-header);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      box-shadow: 0 -8px 24px -12px rgba(36, 30, 20, 0.25);
+    }
+
+    .account-tabbar__link {
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 2px;
+      color: var(--color-text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .account-tabbar__link[aria-current='page'] { color: var(--color-accent-strong); }
+  }
+
+  @media (max-width: 640px) {
+    .account-shell .brand__text { display: none; }
+  }
+
+  /* ---- Sign-in / sign-up frame ---- */
+
+  .auth-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .auth-brand {
+    order: 2;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: clamp(32px, 5vw, 72px);
+    background:
+      radial-gradient(60% 50% at 85% 8%, rgba(226, 195, 123, 0.28), transparent 70%),
+      radial-gradient(50% 45% at 10% 100%, rgba(200, 16, 46, 0.3), transparent 70%),
+      linear-gradient(160deg, var(--color-inverse), var(--color-inverse-deep));
+    color: var(--color-on-inverse);
+  }
+
+  .auth-brand__inner { position: relative; display: grid; gap: var(--space-7); max-width: 460px; }
+
+  .auth-brand__quote p {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+    line-height: 1.2;
+    color: var(--white);
+    text-wrap: balance;
+  }
+
+  .auth-brand__quote { margin: 0; padding-left: var(--space-4); border-left: 3px solid var(--color-highlight); }
+
+  .auth-brand__promises { display: grid; gap: var(--space-4); }
+
+  .auth-brand__promises li { display: flex; gap: var(--space-3); align-items: flex-start; }
+
+  .auth-brand__promises strong { display: block; color: var(--white); font-weight: 600; }
+  .auth-brand__promises li > span:last-child { font-size: var(--text-sm); color: var(--color-on-inverse-muted); line-height: 1.5; }
+
+  .auth-brand__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-on-inverse-faint);
+    color: var(--color-highlight-soft);
+  }
+
+  .auth-panel {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: var(--space-5) clamp(20px, 5vw, 64px);
+    background: var(--color-bg-soft);
+  }
+
+  .auth-panel__main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    width: min(100%, 440px);
+    margin-inline: auto;
+    padding-block: var(--space-6);
+  }
+
+  .auth-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+
+  .auth-back:hover { color: var(--color-heading); }
+  .auth-back__icon { transform: rotate(180deg); }
+
+  .auth-panel__note { text-align: center; font-size: 0.8rem; color: var(--color-text-muted); }
+
+  @media (max-width: 900px) {
+    .auth-shell { grid-template-columns: minmax(0, 1fr); }
+    .auth-panel { order: 2; min-height: auto; flex: 1; }
+    .auth-brand { order: 1; padding: var(--space-5) 20px; }
+    .auth-brand__inner { gap: 0; max-width: none; }
+    .auth-brand__quote,
+    .auth-brand__promises { display: none; }
+  }
+}
+
+/* Buttons set `display` in the components layer, so hiding them has to happen in a later one. */
+@layer features {
+  @media (max-width: 900px) {
+    .account-header__site { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .account-header__label { display: none; }
+  }
+}

@@ -1,0 +1,183 @@
+/* Shared interface patterns added with the customer area: form fields, status, feedback, loading, motion. */
+@layer components {
+  /* ---- Entrance motion (staggered with --i) ---- */
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .reveal {
+    animation: rise var(--duration-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* ---- Form fields ---- */
+
+  .field__label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-heading);
+  }
+
+  .field__tag { font-weight: 500; font-size: 0.8rem; color: var(--color-text-muted); }
+  .field__hint { font-size: 0.85rem; color: var(--color-text-muted); }
+  .field__error { font-size: 0.85rem; font-weight: 600; color: var(--color-danger); }
+
+  .input,
+  .select,
+  .textarea {
+    min-height: 48px;
+    transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  }
+
+  .input:hover:not([readonly]),
+  .select:hover,
+  .textarea:hover { border-color: var(--color-accent-border); }
+
+  .input:focus-visible,
+  .select:focus-visible,
+  .textarea:focus-visible {
+    border-color: var(--color-accent);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--color-focus-ring);
+  }
+
+  .input[aria-invalid='true'],
+  .textarea[aria-invalid='true'] { border-color: var(--color-danger); }
+
+  .textarea {
+    width: 100%;
+    padding: var(--space-3) 14px;
+    font: inherit;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  /* ---- Avatar ---- */
+
+  .avatar {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, var(--color-highlight-soft), var(--color-highlight));
+    color: var(--color-inverse-deep);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .avatar--sm { width: 32px; height: 32px; font-size: 0.78rem; }
+  .avatar--md { width: 40px; height: 40px; font-size: 0.92rem; }
+  .avatar--lg { width: 64px; height: 64px; font-size: 1.35rem; font-family: var(--font-serif); }
+
+  /* ---- Status chip ---- */
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .status-chip::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: currentColor;
+  }
+
+  .status-chip--success { background: var(--color-success-tint); color: var(--color-success); }
+  .status-chip--warning { background: var(--color-warning-tint); color: var(--color-warning); }
+  .status-chip--danger { background: var(--color-danger-tint); color: var(--color-danger); }
+  .status-chip--info { background: var(--color-highlight-tint); color: var(--color-highlight-strong); }
+  .status-chip--neutral { background: var(--color-bg); color: var(--color-text-muted); }
+
+  /* ---- Callout ---- */
+
+  .callout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .callout .icon { margin-top: 2px; flex-shrink: 0; }
+  .callout--info { background: var(--color-highlight-tint); border-color: var(--color-highlight-soft); color: var(--color-heading); }
+  .callout--info .icon { color: var(--color-highlight-strong); }
+  .callout--success { background: var(--color-success-tint); border-color: var(--color-success); color: var(--color-heading); }
+  .callout--success .icon { color: var(--color-success); }
+  .callout--warning { background: var(--color-warning-tint); border-color: var(--color-warning); color: var(--color-heading); }
+  .callout--warning .icon { color: var(--color-warning); }
+  .callout--danger { background: var(--color-danger-tint); border-color: var(--color-accent-border); color: var(--color-heading); }
+  .callout--danger .icon { color: var(--color-danger); }
+
+  /* ---- Skeleton ---- */
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  .skeleton {
+    display: block;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg-soft) 50%, var(--color-border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .skeleton--round { border-radius: var(--radius-pill); }
+
+  /* ---- Progress ring ---- */
+
+  @keyframes ring-draw {
+    from { stroke-dashoffset: var(--ring-circ); }
+  }
+
+  .ring { position: relative; flex-shrink: 0; }
+  .ring > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+  .ring > svg circle { fill: none; stroke-width: 7; }
+  .ring__track { stroke: var(--ring-track, var(--color-border)); }
+
+  .ring__value {
+    stroke: var(--ring-color, var(--color-highlight));
+    stroke-linecap: round;
+    stroke-dashoffset: var(--ring-offset);
+    animation: ring-draw 1.2s var(--ease-out) 0.25s both;
+  }
+
+  .ring__label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  /* ---- Icon ---- */
+
+  .icon { flex-shrink: 0; }
+
+  .btn .icon { transition: transform var(--duration) var(--ease); }
+  .btn:hover .icon:last-child { transform: translateX(2px); }
+}

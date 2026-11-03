@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/Icon'
 import { Section } from '@/components/ui/Section'
 import { SectionHead } from '@/components/ui/SectionHead'
 
@@ -25,9 +26,15 @@ export function MemorialsSection() {
           <p className="tiny-label">Virtual remembrance</p>
           <h3>Leave flowers, light a candle and share a personal tribute.</h3>
           <div className="tribute-row">
-            <span>💐 132 flowers</span>
-            <span>🕯️ 48 candles</span>
-            <span>💬 21 messages</span>
+            <span>
+              <Icon name="flower" size={16} /> 132 flowers
+            </span>
+            <span>
+              <Icon name="candle" size={16} /> 48 candles
+            </span>
+            <span>
+              <Icon name="chat" size={16} /> 21 messages
+            </span>
           </div>
           <p className="muted">
             Sample memorial content is clearly labelled as a demonstration of a digital remembrance experience.

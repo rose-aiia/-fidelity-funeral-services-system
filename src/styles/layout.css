@@ -15,6 +15,8 @@
     background: var(--color-inverse-deep);
     color: var(--color-on-inverse);
     box-shadow: var(--shadow-md);
+    --outline-color: var(--white);
+    --outline-hover: var(--color-on-inverse-faint);
   }
 
   .site-header__inner {
@@ -31,13 +33,11 @@
     gap: var(--space-3);
   }
 
-  /* Outline buttons default to dark-on-light; flip them on the dark header. */
-  .site-header .btn--outline {
-    border-color: rgba(255, 255, 255, 0.5);
-    color: var(--white);
-  }
+  .site-header__user { font-size: var(--text-sm); font-weight: 600; color: var(--color-on-inverse-muted); }
 
-  .site-header .btn--outline:hover { background: var(--color-on-inverse-faint); }
+  @media (max-width: 640px) {
+    .site-header__user { display: none; }
+  }
 
   .brand {
     display: flex;
@@ -84,11 +84,13 @@
   .site-nav {
     display: flex;
     align-items: center;
-    gap: var(--space-5);
+    gap: var(--space-4);
     margin-left: auto;
   }
 
-  .site-nav ul { display: flex; align-items: center; gap: var(--space-5); }
+  .site-nav ul { display: flex; align-items: center; gap: var(--space-2); }
+  .site-nav .btn,
+  .site-nav__account { white-space: nowrap; }
 
   .site-nav li a {
     color: var(--color-on-inverse-muted);
@@ -105,6 +107,22 @@
     color: var(--white);
     background: var(--color-on-inverse-faint);
   }
+
+  .site-nav__account {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px var(--space-3) 6px 6px;
+    border-radius: var(--radius-pill);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    background: var(--color-on-inverse-faint);
+    transition: background var(--duration) var(--ease);
+  }
+
+  .site-nav__account:hover { background: rgba(255, 255, 255, 0.2); }
 
   .menu-toggle {
     display: none;
@@ -143,7 +161,9 @@
 
     .site-nav ul { flex-direction: column; align-items: stretch; gap: var(--space-1); }
     .site-nav li a { display: block; font-size: var(--text-lg); padding: var(--space-4) var(--space-3); }
-    .site-nav__cta { margin-top: var(--space-4); }
+    .site-nav__cta { margin-top: var(--space-2); }
+    .site-nav__signin,
+    .site-nav__account { margin-top: var(--space-4); justify-content: center; min-height: 48px; }
   }
 
   /* ---- Footer ---- */
@@ -161,7 +181,7 @@
     padding-block: clamp(40px, 5vw, 64px);
   }
 
-  .site-footer h3 {
+  .site-footer h2 {
     margin: 0 0 14px;
     color: var(--color-on-inverse);
     font-family: var(--font-sans);

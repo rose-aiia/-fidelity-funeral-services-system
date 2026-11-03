@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { anchor } from '@/config/routes'
+import { Avatar } from '@/components/ui/Avatar'
+import { anchor, paths } from '@/config/routes'
 import { primaryNav } from '@/config/site'
+import { useAuth } from '@/features/auth'
 import { Brand } from './Brand'
 
 export function HomeHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user } = useAuth()
   const closeMenu = () => setIsMenuOpen(false)
 
   useEffect(() => {
@@ -32,6 +35,18 @@ export function HomeHeader() {
               </li>
             ))}
           </ul>
+
+          {user ? (
+            <Link className="site-nav__account" to={user.role === 'customer' ? paths.account : paths.provider} onClick={closeMenu}>
+              <Avatar name={user.name} size="sm" />
+              My account
+            </Link>
+          ) : (
+            <Link className="btn btn--outline btn--sm site-nav__signin" to={paths.login} onClick={closeMenu}>
+              Sign in
+            </Link>
+          )}
+
           <Link className="btn btn--primary btn--sm site-nav__cta" to={anchor('quote-form')} onClick={closeMenu}>
             Request a quote
           </Link>

@@ -24,11 +24,24 @@
     --grey-50: #fafafa;
     --white: #ffffff;
 
+    /* Warm neutrals and champagne gold: calm, premium surfaces and "legacy" moments. */
+    --cream-100: #f6f3ee;
+    --cream-50: #faf8f4;
+    --cream-300: #e9e2d6;
+    --gold-100: #f6edd6;
+    --gold-300: #e2c37b;
+    --gold-500: #b8923a;
+    --gold-700: #7a5c14;
+    --green-100: #e3f2e8;
+    --green-700: #1f6b3d;
+    --amber-100: #fbf0d9;
+    --amber-700: #8a5a00;
+
     /* ---- Semantic: surfaces & text ---- */
-    --color-bg: var(--grey-100);
-    --color-bg-soft: var(--grey-50);
+    --color-bg: var(--cream-100);
+    --color-bg-soft: var(--cream-50);
     --color-surface: var(--white);
-    --color-border: var(--grey-200);
+    --color-border: var(--cream-300);
     --color-text: var(--ink-900);
     --color-text-muted: var(--ink-500);
     --color-heading: var(--ink-900);
@@ -51,6 +64,18 @@
 
     --color-focus-ring: rgba(200, 16, 46, 0.4);
     --color-hover-tint: rgba(200, 16, 46, 0.06);
+
+    /* ---- Semantic: legacy highlight and status ---- */
+    --color-highlight: var(--gold-500);
+    --color-highlight-strong: var(--gold-700);
+    --color-highlight-soft: var(--gold-300);
+    --color-highlight-tint: var(--gold-100);
+    --color-success: var(--green-700);
+    --color-success-tint: var(--green-100);
+    --color-warning: var(--amber-700);
+    --color-warning-tint: var(--amber-100);
+    --color-danger: var(--red-700);
+    --color-danger-tint: var(--red-50);
 
     /* ---- Typography ---- */
     --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -81,20 +106,24 @@
     /* ---- Shape ---- */
     --radius-sm: 10px;
     --radius-md: 14px;
+    --radius-lg: 22px;
     --radius-pill: 999px;
 
     /* ---- Elevation ---- */
-    --shadow-sm: 0 1px 2px rgba(36, 36, 36, 0.06), 0 1px 3px rgba(36, 36, 36, 0.08);
-    --shadow-md: 0 8px 20px -8px rgba(36, 36, 36, 0.28);
-    --shadow-lg: 0 24px 48px -16px rgba(36, 36, 36, 0.38);
+    --shadow-sm: 0 1px 2px rgba(36, 30, 20, 0.05), 0 2px 6px rgba(36, 30, 20, 0.06);
+    --shadow-md: 0 1px 2px rgba(36, 30, 20, 0.06), 0 10px 24px -10px rgba(36, 30, 20, 0.3);
+    --shadow-lg: 0 2px 4px rgba(36, 30, 20, 0.06), 0 28px 56px -18px rgba(36, 30, 20, 0.42);
 
     /* ---- Motion ---- */
     --duration: 180ms;
+    --duration-slow: 520ms;
     --ease: ease;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* ---- Layout ---- */
     --container-w: 1140px;
     --header-h: 5rem;
+    --tabbar-h: 4rem;
 
     /* ---- Stacking ---- */
     --z-header: 100;

@@ -7,7 +7,7 @@ import './provider.css'
 export default function ProviderPortalPage() {
   return (
     <main className="container section provider-page__content" id="main-content">
-      <SectionHead eyebrow="Provider portal" title="Operational support for funeral professionals." align="left" />
+      <SectionHead eyebrow="Provider portal" title="Operational support for funeral professionals." align="left" as="h1" />
 
       <div className="split">
         <div className="provider-copy stack">

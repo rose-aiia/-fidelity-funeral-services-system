@@ -46,7 +46,14 @@
     box-shadow: var(--shadow-lg);
   }
 
-  .hero__panel h3 { margin: 6px 0 var(--space-3); }
+  .hero__panel-title {
+    margin: 6px 0 var(--space-3);
+    font-family: var(--font-serif);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    color: var(--color-heading);
+  }
 
   .help-links { display: grid; gap: var(--space-1); }
 
@@ -189,6 +196,7 @@
   .tribute-row span {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-pill);
     background: var(--color-accent-tint);

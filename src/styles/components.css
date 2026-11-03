@@ -34,8 +34,13 @@
   .btn--dark { background: var(--color-inverse); color: var(--color-on-inverse); }
   .btn--dark:hover { background: var(--color-inverse-hover); }
 
-  .btn--outline { background: transparent; border-color: var(--color-inverse); color: var(--color-inverse); }
-  .btn--outline:hover { background: var(--color-hover-tint); }
+  /* --outline-color lets a dark container recolour the outline button without overriding it. */
+  .btn--outline {
+    background: transparent;
+    border-color: var(--outline-color, var(--color-inverse));
+    color: var(--outline-color, var(--color-inverse));
+  }
+  .btn--outline:hover { background: var(--outline-hover, var(--color-hover-tint)); }
 
   .btn--lg { padding: 17px 30px; font-size: 1.05rem; min-height: 54px; }
   .btn--sm { padding: 10px 18px; font-size: var(--text-sm); min-height: 40px; }
@@ -130,7 +135,8 @@
   }
 
   .section-head--left { max-width: none; margin: 0 0 28px; text-align: left; }
-  .section-head h2 { margin: var(--space-3) 0; }
+  .section-head :is(h1, h2) { margin: var(--space-3) 0; }
+  .section-head h1 { font-size: var(--text-display-md); letter-spacing: -0.01em; }
 
   .eyebrow {
     margin: 0;

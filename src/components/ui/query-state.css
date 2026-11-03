@@ -1,0 +1,13 @@
+@layer components {
+  .query-state {
+    grid-column: 1 / -1;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  .query-state--skeleton { justify-items: stretch; text-align: left; }
+}

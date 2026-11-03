@@ -30,7 +30,7 @@ export function HeroSection() {
 
         <div className="card hero__panel" aria-label="How we can help overview">
           <p className="eyebrow">How We Can Help</p>
-          <h3>Compassionate guidance</h3>
+          <p className="hero__panel-title">Compassionate guidance</p>
           <ul className="help-links">
             {helpLinks.map((link) => (
               <li key={link.label}>

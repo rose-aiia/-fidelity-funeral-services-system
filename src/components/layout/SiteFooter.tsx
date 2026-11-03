@@ -34,7 +34,7 @@ export function SiteFooter() {
 
         {footerColumns.map((column) => (
           <div key={column.title}>
-            <h3>{column.title}</h3>
+            <h2>{column.title}</h2>
             <ul>
               {column.links.map((link) => (
                 <li key={link.label}>

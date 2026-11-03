@@ -8,7 +8,7 @@ type BrandProps = {
 
 export function Brand({ to, subtitle }: BrandProps) {
   return (
-    <Link to={to} className="brand" aria-label="Fidelity Life home">
+    <Link to={to} className="brand">
       <span className="brand__mark" aria-hidden="true">
         <img src={site.logo} alt="Fidelity Life logo" />
       </span>

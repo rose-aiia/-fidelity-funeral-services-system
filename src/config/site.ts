@@ -1,3 +1,4 @@
+import type { IconName } from '@/components/ui/Icon'
 import { anchor, paths } from './routes'
 
 export type NavLink = {
@@ -16,6 +17,21 @@ export const primaryNav: NavLink[] = [
   { label: 'Plans', to: anchor('plans') },
   { label: 'Memorials', to: anchor('memorials') },
   { label: 'Support', to: anchor('support') },
+]
+
+export type AccountNavItem = NavLink & { icon: IconName; end?: boolean }
+
+export const accountNav: AccountNavItem[] = [
+  { label: 'Overview', to: paths.account, icon: 'home', end: true },
+  { label: 'My policy', to: paths.accountPolicy, icon: 'shield' },
+  { label: 'Requests', to: paths.accountRequests, icon: 'chat' },
+  { label: 'Profile', to: paths.accountProfile, icon: 'user' },
+]
+
+/** Parts of the account that are designed but not built yet; shown so the product direction is visible. */
+export const accountComingSoon: { label: string; icon: IconName; preview: string }[] = [
+  { label: 'Memorials', icon: 'flower', preview: anchor('memorials') },
+  { label: 'Marketplace', icon: 'bag', preview: anchor('marketplace') },
 ]
 
 export const footerColumns: { title: string; links: NavLink[] }[] = [
@@ -39,6 +55,8 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     title: 'Sample notice',
     links: [
       { label: 'Request a sample quote', to: anchor('quote-form') },
+      { label: 'Sign in', to: paths.login },
+      { label: 'My account', to: paths.account },
       { label: 'Provider concept', to: paths.provider },
       { label: 'Demo prototype', to: anchor('top') },
     ],
