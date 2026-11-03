@@ -31,6 +31,22 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
 ]
 
+/** The portal's navigation: what each kind of staff member gets. */
+export function portalNav(role: 'admin' | 'provider'): AccountNavItem[] {
+  const common: AccountNavItem[] = [
+    { label: 'Overview', to: paths.provider, icon: 'home', end: true },
+    { label: role === 'admin' ? 'Requests' : 'Assignments', to: paths.portalRequests, icon: 'chat' },
+    { label: 'Orders', to: paths.portalOrders, icon: 'bag' },
+  ]
+  if (role === 'provider') return common
+  return [
+    ...common,
+    { label: 'Customers', to: paths.portalCustomers, icon: 'users' },
+    { label: 'Providers', to: paths.portalProviders, icon: 'shield' },
+    { label: 'Activity', to: paths.portalActivity, icon: 'clock' },
+  ]
+}
+
 export const footerColumns: { title: string; links: NavLink[] }[] = [
   {
     title: 'Explore',
@@ -55,7 +71,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Request a sample quote', to: anchor('quote-form') },
       { label: 'Sign in', to: paths.login },
       { label: 'My account', to: paths.account },
-      { label: 'Provider concept', to: paths.provider },
+      { label: 'Staff portal', to: paths.provider },
       { label: 'Demo prototype', to: anchor('top') },
     ],
   },

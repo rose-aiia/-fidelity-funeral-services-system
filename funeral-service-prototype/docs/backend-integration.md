@@ -81,7 +81,7 @@ Customers sign in with a Zimbabwean mobile number and a 6-digit SMS code. There 
 | `GET /me`, `PATCH /me` | Read or update the profile | 401 `unauthenticated`, 422 |
 | `GET /me/policy` | Linked policy, or 204 if none | 401 |
 | `POST /me/policy` | Link a policy | 422 `policy_not_found`, 429 `locked_out` |
-| `GET /me/requests` | Assistance requests, newest first | 401 |
+| `GET /me/requests` | Assistance requests, newest first, without the internal `assignment.note` | 401 |
 | `POST /me/requests` | Create a request (201, status `received`) | 422 (`message` required for `general`, max 600) |
 
 ### Trying live mode with the demo accounts
@@ -93,7 +93,11 @@ and the code `123456`:
 | --- | --- |
 | `+263771234567` | Rutendo Moyo, customer, policy FLA-204815 already linked and one open request |
 | `+263772000111` | Tafara Ncube, customer, no policy. Link FLA-318227 with ID `08-765432-B-15` |
-| `+263773000222` | Chipo Dube, provider staff |
+| `+263773000333` | Nomsa Ndlovu, administrator (see [Staff portal](#staff-portal)) |
+| `+263773000222` | Chipo Dube, provider staff for Harare Funeral Care (a funeral director) |
+| `+263773000444` | Farai Chigumba, provider staff for Msasa Florists (a marketplace vendor) |
+
+The mock also seeds six more customers (`+2637741000nn`) so the administrator's tables have something to show.
 
 Any other valid number can sign up (it is accepted with the same code). State is in memory and resets when
 the mock restarts.
@@ -190,10 +194,107 @@ has two seeded orders (`FS-1017` delivered, `FS-1038` in progress).
     abandoned or paid another way.
   - Refunds and cancellations (the `cancelled` status), with an audit trail.
   - Payment timeouts: an unanswered EcoCash prompt should expire to `failed` rather than stay `pending`.
-- **Provider fulfilment.** Each line names its `provider`. Today the mock moves orders through
-  `confirmed`, `in_progress` and `delivered` on a timer. In a later phase providers will update these
-  statuses themselves (staff or provider endpoints, role-checked on the server), and the timer goes away.
+- **Provider fulfilment.** Each line names its `provider`. Orders placed through the API still move through
+  `confirmed`, `in_progress` and `delivered` on a timer until a person steps in; providers and administrators
+  then move them with `PATCH /admin/orders/{id}` (see [Staff portal](#staff-portal)), which stops the timer for
+  that order. The timer is a demo convenience and goes away in production.
+- **Switched-off providers.** `GET /marketplace/items[/{id}]` leaves out products whose provider an administrator
+  has switched off, and `POST /me/orders` prices against that same list, so a stale basket line fails with the
+  existing `422` "no longer available".
 - **Images.** `MarketplaceItem.image` is a URL in production. The mock server returns inline `data:` URIs.
+
+## Staff portal
+
+Administrators triage assistance requests, hand them to funeral service providers, and manage customers,
+orders and providers. Providers (funeral directors and marketplace vendors) see only what concerns them. The
+contract is the `/admin/*` group in `openapi.yaml`; the mock implements all of it. The rules themselves
+(`features/admin/logic.ts`, `features/account/request-flow.ts`, `ORDER_TRANSITIONS` in `order-flow.ts`) are
+pure functions shared with the browser mock, so a real backend can port them one for one. Try it with the
+three staff numbers in the table above.
+
+| | Customer | Provider | Administrator |
+| --- | --- | --- | --- |
+| Own requests, orders, memorials (`/me/*`) | yes | no | no |
+| Requests and the internal note | own, no note | only those assigned to them, with the note | all, with the note |
+| Assign a request | no | no | yes |
+| Accept, decline, complete an assignment | no | their own | complete only |
+| Orders | own | only orders with their products, their lines and share only | all |
+| Move an order along | no | wholly-theirs orders, not cancelling | any legal move, including cancelling and shared orders |
+| Customers, providers, activity log | no | no | yes |
+| Switch a provider on or off, add one | no | no | yes |
+
+| Endpoint | Who | Notable errors |
+| --- | --- | --- |
+| `GET /admin/overview` | admin, provider | |
+| `GET /admin/requests[?status=]`, `GET .../{id}` | admin (all), provider (theirs) | 404 for a provider on someone else's |
+| `POST /admin/requests/{id}/assignment` | admin | 409 `provider_inactive`, `already_complete`, 422 `providerId` |
+| `PATCH /admin/requests/{id}/assignment` | provider (own), admin (`completed` only) | 403, 404, 409 `invalid_transition` |
+| `GET /admin/orders[?status=]`, `PATCH .../{id}` | admin (all), provider (theirs) | 403, 404, 409 `invalid_transition` |
+| `GET /admin/customers[/{id}]` | admin | 404 |
+| `GET`, `POST /admin/providers`, `PATCH .../{id}` | admin | 409 `provider_exists`, 422, 404 |
+| `GET /admin/activity` | admin | |
+
+- **Authorise on the server, every time.** Take the role and `providerId` from the session's user record, never
+  from the request (a body, header or query string that says "I am a provider" must be ignored). Scope every
+  query by `providerId` in the data layer (`WHERE assignment.providerId = :mine`), not by filtering after the
+  fact, and rebuild `actions` on the server from the same rules; the client only uses them to show buttons.
+  - `401` no session. `403` signed in but this role may never do this (a customer on `/admin`, a provider on an
+    administrator route, an administrator accepting a request on a provider's behalf, a provider on a shared
+    order or cancelling). `404` the caller may not even know it exists (a provider asking for a request or order
+    that isn't theirs), so ids can't be probed. A legal order move the caller isn't allowed to make is `403`; a
+    move that isn't legal from the current status is `409` for everyone.
+  - Re-check on every write, not just on read, and load the row inside the same transaction as the update.
+- **Privacy: show providers only what they need.** A provider sees a request's message, contact preference and
+  the customer's name and phone, never the customer's policy, policy number or status. On orders they see only
+  their own lines and their share of the money (no other providers' lines, no delivery fee), plus the delivery
+  contact they need to deliver. Customer detail (policy, other requests, memorials, total spend) is
+  administrator-only, and the policy's ID number never leaves the server for anyone.
+- **The internal note stays internal.** `assignment.note` is the administrator's note to the provider. It is
+  in `/admin` responses and nowhere in `/me/*`: strip it in one place (a customer-facing serialiser) rather
+  than hoping each endpoint remembers. Families see the assignment's provider, status and times only.
+- **Assignment lifecycle.** `POST` assign: request `received`/`assigned`/`in_progress` -> `assigned`, assignment
+  `assigned` (assigning again replaces it; a `complete` request is `409`; an inactive provider is `409`).
+  The provider then answers: `assigned` -> `accepted` (request `in_progress`) or `declined` (request back to
+  `received`, `assignedTo` cleared, and a bereavement becomes urgent again for the administrator).
+  `accepted` -> `completed` (request `complete`). Nothing else is legal (`409 invalid_transition`). An
+  administrator may close any open request with `completed`. Keep a declined assignment as history; don't
+  delete it.
+- **Audit log.** Every mutation by an administrator or provider writes an entry in the same transaction as the
+  change: who (user and role), what (action, entity type and id, readable `summary`) and when (server time).
+  The log is append-only: no update or delete endpoint, and the database role used by the API gets `INSERT`
+  and `SELECT` only. `summary` is for people ("Assigned AR-1051 to Harare Funeral Care"); keep the structured
+  facts (previous and new value, IP address) in `detailsJson` as well. Also log repeated `403`s, since they point
+  at probing. `GET /admin/activity` returns the latest 100, newest first.
+- **Deactivating a provider** takes effect at once: new assignments are refused, their products leave the
+  catalogue and can't be priced into new orders. Existing assignments and orders are left alone so staff can
+  finish them (a switched-off provider's staff can still sign in and complete what they hold).
+
+How these shapes map to the backend's Prisma models (`funeral-service-backend/prisma/schema.prisma`), and what
+the schema still needs:
+
+| API | Prisma | Notes |
+| --- | --- | --- |
+| `Role` `customer` / `admin` | `UserRole` `CUSTOMER` / `ADMIN` | Add `PROVIDER` (and `STAFF` if kept). |
+| `User.providerId` | none | Add a nullable `providerId` on `User` (or a `ProviderStaff` join table) pointing at `FuneralServiceProvider`. |
+| `User` signs in by phone + SMS code | `User.email` + `passwordHash` | The schema is email and password; add `phone` and an OTP flow, or change the app. |
+| `ProviderRecord` | `FuneralServiceProvider` | `isActive` maps directly. `phone` is `phoneNumber`, `province` and `city` exist; add a slug (`id` here is `providerIdFor(name)`) or map by uuid. `addressLine1` and `country` are required in the schema but not collected. |
+| `AssistanceRequest` | `FuneralAssistanceRequest` | Status differs, see below. Add `kind` (bereavement / claim / general), `contactPreference`, and a human reference (`AR-1042`). |
+| `RequestAssignment` | `ProviderAssignment` (`assignmentType` `ASSISTANCE`) | `providerId`, `assignedAt` and `notes` (the internal note) map directly; `assignedByAdminId` is required. Add `respondedAt`. Current assignment = latest row for the request. |
+| `AssignmentStatus` `assigned` / `accepted` / `declined` / `completed` | `AssignmentStatus` `ASSIGNED` / `ACCEPTED` / `DECLINED` / `COMPLETED` | Same four. `CANCELLED` isn't used by the app. |
+| `RequestStatus` `received` / `assigned` / `in_progress` / `complete` | `AssistanceStatus` `OPEN` / `REVIEWED` / `SCHEDULED` / `COMPLETED` / `CANCELLED` | Not the same set. Either derive the app status from the latest assignment (`statusForAssignment`) and keep `AssistanceStatus` for the back office, or add the missing values. |
+| `AuditEntry` | `AuditLog` | `action` `create` / `update` / `assign` -> `AuditActionType` `CREATE` / `UPDATE` / `ASSIGN`. `entityType` + `entityId` exist; `actorName` / `actorRole` come from the actor relation; `summary` goes in `detailsJson`. `actorAdminId` only covers administrators: providers need `actorUserId` (already there). |
+| `Order` | `MarketplaceOrder` + `OrderItem` | The schema has no per-line provider, delivery contact, payment or events. Add `MarketplaceProduct.providerId`, copy it and the product name onto `OrderItem`, and add delivery fields, a `Payment` model and an order event table. |
+| `OrderStatus` | `OrderStatus` | See below. |
+| `MarketplaceItem` hidden when provider off | `MarketplaceProduct.isActive` | Filter by the provider's `isActive` as well as the product's. |
+
+`OrderStatus` differs between the two. The app has `awaiting_payment`, `payment_failed`, `paid`, `confirmed`,
+`in_progress`, `delivered`, `cancelled`; Prisma has `PENDING`, `PAID`, `PROCESSING`, `SHIPPED`, `CANCELLED`,
+`COMPLETED`. Reasonable mapping: `awaiting_payment` / `payment_failed` -> `PENDING` (the payment state lives on a
+`Payment` row, which the schema lacks), `paid` -> `PAID`, `confirmed` / `in_progress` -> `PROCESSING`,
+`delivered` -> `COMPLETED`, `cancelled` -> `CANCELLED`. That collapses `confirmed` and `in_progress` and has no
+use for `SHIPPED`, and `payment_failed` can't be told from "not paid yet". Cleaner: add `AWAITING_PAYMENT`,
+`PAYMENT_FAILED`, `CONFIRMED`, `IN_PROGRESS` and `DELIVERED` to the enum (or store the app's seven values) and
+keep the transitions in `ORDER_TRANSITIONS`, which the server must enforce.
 
 ## What the backend must do
 
@@ -214,9 +315,9 @@ has two seeded orders (`FS-1017` delivered, `FS-1038` in progress).
 - **Quote requests have no contact details.** The form collects service type, town and plan only, so a
   provider has no way to reach the family. This needs name and phone at minimum, plus consent wording.
   The contract does not include them yet because the UI doesn't collect them.
-- **Provider portal.** Its numbers are still hardcoded. It now sits behind a client-side role guard
-  (`provider`, `staff` or `admin`), which only hides the screen. The server must enforce roles itself on
-  every provider endpoint, and a dashboard endpoint is still needed.
+- **Staff portal roles.** The app's role guard only hides screens. The `/admin` endpoints enforce roles
+  themselves (see [Staff portal](#staff-portal)); the `staff` role exists in the type but has no portal
+  behaviour yet, so the mock answers `403` for it. Decide what `staff` should be, or drop it.
 - **Marketplace "Enquire" button** does nothing yet and needs an endpoint.
 - **Response validation.** Responses are cast to their TypeScript types. A schema library (e.g. Zod) at the
   `api.ts` boundary would catch contract drift at runtime; it wasn't added to keep dependencies minimal.

@@ -1,4 +1,6 @@
 import { ApiError } from '@/lib/api-error'
+import { readInactiveProviders } from '@/lib/mock-flags'
+import { activeCatalogue } from './catalogue'
 import { marketplaceItems, type NewOrder, type Order, type PaymentInput } from './data'
 import {
   advanceOrder,
@@ -78,7 +80,7 @@ export function createOrder(userId: string, input: NewOrder): Order {
     reference: nextReference(records),
     input,
     now: Date.now(),
-    catalogue: marketplaceItems,
+    catalogue: activeCatalogue(marketplaceItems, readInactiveProviders()),
   })
   if (!created.ok) throw new ApiError(422, 'validation_failed', 'The order is invalid', created.details)
 
@@ -111,4 +113,13 @@ export function resolveHostedPayment(userId: string, id: string, outcome: 'paid'
   const next = resolvePayment(record, outcome, Date.now())
   write(records.map((candidate) => (candidate.id === id ? next : candidate)))
   return toPublicOrder(next)
+}
+
+// --- the staff portal reads and updates every customer's orders (the mock server is one server) ---
+
+/** Every order, brought up to date with the clock. For the staff portal only. */
+export const listAllOrderRecords = (): OrderRecord[] => load()
+
+export function saveOrderRecord(record: OrderRecord): void {
+  write(load().map((candidate) => (candidate.id === record.id ? record : candidate)))
 }

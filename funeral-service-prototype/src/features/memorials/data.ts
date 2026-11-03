@@ -1,4 +1,8 @@
-// Types and pure helpers for memorials. No imports: scripts/mock-api.mjs loads this file directly under Node.
+// Types and pure helpers for memorials. scripts/mock-api.mjs loads this file directly under Node, so it only
+// uses relative `.ts` imports.
+import { slugify } from '../../lib/slug.ts'
+
+export { slugify }
 
 export type MemorialPhoto = {
   id: string
@@ -101,21 +105,6 @@ export const TRIBUTE_MAX_LENGTH = 500
 export const TRIBUTE_AUTHOR_MAX_LENGTH = 60
 export const MAX_PHOTOS = 8
 export const MAX_TIMELINE_ENTRIES = 20
-
-const DIACRITICS = /[̀-ͯ]/g
-
-/** "Grace Nyathi" -> "grace-nyathi". Always returns something usable as a path segment. */
-export function slugify(name: string): string {
-  const slug = name
-    .normalize('NFD')
-    .replace(DIACRITICS, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
-    .replace(/-+$/g, '')
-  return slug || 'memorial'
-}
 
 /** A slug that isn't in `taken`, adding `-2`, `-3`... when the plain one is. */
 export function uniqueSlug(name: string, taken: Iterable<string>): string {

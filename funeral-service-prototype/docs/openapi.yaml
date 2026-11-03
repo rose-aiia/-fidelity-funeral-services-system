@@ -28,6 +28,18 @@ info:
     choices only (item, options, quantity, personalisation); the server prices every order and returns the
     authoritative totals. An order starts `awaiting_payment`, and once its payment is `paid` it moves on to
     `confirmed`, `in_progress` and `delivered`. Orders are brought up to date whenever they are read.
+    Products of a provider the administrator has switched off are left out of `GET /marketplace/items[/{id}]`
+    and cannot be ordered (a basket line for one fails with a `422` "no longer available").
+
+    **Staff portal.** `/admin/*` endpoints need the session cookie and a staff role. An administrator
+    (`role: admin`) sees and manages everything; a provider (`role: provider`, with a `providerId`) sees only
+    the requests assigned to them and their share of the orders that include their products. Without a session
+    they answer `401` `unauthenticated`; a customer, or a provider calling an administrator-only route, gets `403`
+    `forbidden`; a provider asking about a request or order that is not theirs gets `404` `not_found`, as if it did
+    not exist. The server decides all of this from its own record of the signed-in user, never from anything the
+    client sends. Every change a staff member makes is written to the activity log (`GET /admin/activity`).
+    Requests handed to a provider carry an internal `assignment.note` from the administrator; it is returned only
+    on `/admin` routes and is dropped from `/me/requests`, so families never see it.
 servers:
   - url: /api
 
@@ -51,6 +63,7 @@ paths:
     get:
       summary: List marketplace products and services
       operationId: listMarketplaceItems
+      description: Products of a provider the administrator has switched off are left out.
       parameters:
         - name: category
           in: query
@@ -70,6 +83,7 @@ paths:
     get:
       summary: One marketplace product or service
       operationId: getMarketplaceItem
+      description: A product of a provider the administrator has switched off answers `404`.
       parameters:
         - $ref: '#/components/parameters/ItemId'
       responses:
@@ -341,6 +355,9 @@ paths:
     get:
       summary: The user's assistance requests
       operationId: listMyRequests
+      description: |
+        Requests as the family sees them. `assignment.note` (the administrator's internal note to the provider)
+        is always removed from this response and from `POST /me/requests`.
       security:
         - cookieAuth: []
       responses:
@@ -851,6 +868,385 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  # ---- Staff portal -----------------------------------------------------------------------------------------------
+
+  /admin/overview:
+    get:
+      summary: The portal's home numbers and what needs attention
+      operationId: adminOverview
+      description: |
+        An administrator's numbers cover every request and order; a provider's cover only the requests assigned
+        to them and their share of the orders that include one of their products.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The overview.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Overview' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/requests:
+    get:
+      summary: Assistance requests, most urgent first
+      operationId: adminListRequests
+      description: |
+        Ordered for triage: urgent requests (a bereavement nobody has taken on) first, then the other open
+        requests oldest first, then finished ones newest first. An administrator sees every request; a provider
+        sees only requests assigned to them (including ones they declined or finished).
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/RequestStatus' }
+      responses:
+        '200':
+          description: The requests.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AdminRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422':
+          description: Code `validation_failed`, `details.status`. Unknown status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/requests/{id}:
+    get:
+      summary: One assistance request
+      operationId: adminGetRequest
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: The request.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/RequestNotFound' }
+
+  /admin/requests/{id}/assignment:
+    post:
+      summary: Assign a request to a provider (administrators only)
+      operationId: adminAssignRequest
+      description: |
+        Hands the request to a provider, or to a different one (the previous assignment is replaced). The request
+        becomes `assigned` and the assignment `assigned`. A finished request cannot be reassigned. Records an
+        activity entry (`assign`).
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssignRequestInput' }
+      responses:
+        '200':
+          description: The request with its new assignment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/RequestNotFound' }
+        '409':
+          description: Code `provider_inactive` (the provider is switched off) or `already_complete` (the request is finished).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Code `validation_failed`. `details.providerId` for a provider not in the directory; `details.note` for a note over 500 characters.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+    patch:
+      summary: Answer or close an assignment
+      operationId: adminRespondToAssignment
+      description: |
+        A provider accepts, declines or completes an assignment, but only their own. An administrator may only send
+        `completed` (to close a request directly). Legal moves: `assigned` -> `accepted` or `declined`,
+        `accepted` -> `completed`. The request's `status` follows (`accepted` -> `in_progress`, `declined` ->
+        back to `received`, and urgent again if it is a bereavement, `completed` -> `complete`). Records an activity
+        entry (`update`).
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssignmentResponse' }
+      responses:
+        '200':
+          description: The updated request.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: Code `forbidden`. An administrator sent `accepted` or `declined`, which only the provider may decide.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404': { $ref: '#/components/responses/RequestNotFound' }
+        '409':
+          description: Code `invalid_transition` (not a legal next step) or `already_complete` (an administrator closing a finished request).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Code `validation_failed`, `details.status`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/orders:
+    get:
+      summary: Marketplace orders, newest first
+      operationId: adminListOrders
+      description: |
+        An administrator sees every order. A provider sees only orders that include one of their products, scoped
+        to their share: only their lines, with `deliveryFee` 0 and `total` equal to their `subtotal`
+        (`scoped: true`). `actions` and `shared` are always worked out from the whole order.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: The orders.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AdminOrder' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422':
+          description: Code `validation_failed`, `details.status`. Unknown status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/orders/{id}:
+    patch:
+      summary: Move an order to its next status
+      operationId: adminUpdateOrder
+      description: |
+        Legal moves: `awaiting_payment` or `payment_failed` -> `cancelled`; `paid` -> `confirmed` or `cancelled`;
+        `confirmed` -> `in_progress` or `cancelled`; `in_progress` -> `delivered` or `cancelled`. An administrator may
+        make any of them. A provider may make the non-cancelling ones, and only on an order that is wholly theirs
+        (no other provider's products on it). Once a person moves an order the demo timer stops for it. The order's
+        history records who did it (the provider's name, or `Zimbabwe Funeral Service` for an administrator).
+        Records an activity entry (`update`).
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderStatusInput' }
+      responses:
+        '200':
+          description: The updated order, scoped for a provider.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrder' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: Code `forbidden`. A legal move that this caller may not make (a provider on a shared order, or cancelling).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Code `not_found`. No such order, or (for a provider) it has none of their products.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: Code `invalid_transition`. Not a legal move from the order's current status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Code `validation_failed`, `details.status`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/customers:
+    get:
+      summary: Customers (administrators only)
+      operationId: adminListCustomers
+      description: Only accounts with role `customer`, by name.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The customers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AdminCustomer' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/customers/{id}:
+    get:
+      summary: One customer in full (administrators only)
+      operationId: adminGetCustomer
+      description: |
+        Profile, linked policy (never the ID number), requests (with the internal assignment note), orders and
+        memorials.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, examples: [u-moyo] }
+      responses:
+        '200':
+          description: The customer.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminCustomerDetail' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Code `not_found`. No such customer (a staff account is not a customer).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/providers:
+    get:
+      summary: The provider directory (administrators only)
+      operationId: adminListProviders
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Providers by name, with their workload.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AdminProvider' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Add a provider (administrators only)
+      operationId: adminCreateProvider
+      description: |
+        The id is the slug of the name (`Kariba Tents` -> `kariba-tents`), the same id products and staff accounts
+        use. The provider starts active. Limited to 20 per user per hour. Records an activity entry (`create`).
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewProvider' }
+      responses:
+        '201':
+          description: The provider.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminProvider' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Code `provider_exists`. A provider with the same id is already in the directory.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Code `validation_failed`. `details` maps `name`, `providerType`, `contactPerson`, `phone`, `email`, `city`, `province` or `description` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /admin/providers/{id}:
+    patch:
+      summary: Switch a provider on or off (administrators only)
+      operationId: adminUpdateProvider
+      description: |
+        A switched-off provider receives no new assignments (`provider_inactive`) and its products leave the public
+        catalogue at once (`GET /marketplace/items`), so they cannot be ordered: a stale basket line fails with a
+        `422` `no longer available`. Existing assignments and orders are untouched. Records an activity entry
+        (`update`) only when the value changes.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, examples: [msasa-florists] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProviderUpdate' }
+      responses:
+        '200':
+          description: The provider.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminProvider' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Code `not_found`. No such provider.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Code `validation_failed`, `details.isActive`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /admin/activity:
+    get:
+      summary: The activity (audit) log (administrators only)
+      operationId: adminActivity
+      description: 'Newest first, at most 100 entries. Append-only: there is no endpoint to change or delete an entry.'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditEntry' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
 components:
   securitySchemes:
     cookieAuth:
@@ -883,6 +1279,12 @@ components:
       required: true
       description: '`MarketplaceItem.id`.'
       schema: { type: string, examples: [wreath-package] }
+    RequestId:
+      name: id
+      in: path
+      required: true
+      description: '`AssistanceRequest.id`.'
+      schema: { type: string, examples: [ar-demo-2] }
     OrderId:
       name: id
       in: path
@@ -905,6 +1307,18 @@ components:
           schema: { $ref: '#/components/schemas/Problem' }
     OrderNotFound:
       description: Code `not_found`. No such order, or it belongs to someone else. Never `403`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: |
+        Code `forbidden`. The caller is signed in but their role may not do this (a customer on `/admin`, or a
+        provider on an administrator-only route).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RequestNotFound:
+      description: Code `not_found`. No such request, or (for a provider) it is not assigned to them.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -1217,6 +1631,10 @@ components:
           type: string
           enum: [customer, staff, provider, admin]
           description: The app only uses this to hide screens. Enforce it on the server too.
+        providerId:
+          type: string
+          description: For `provider` users, the provider they work for (`ProviderRecord.id`). Absent for everyone else.
+          examples: [harare-funeral-care]
         language:
           type: string
           enum: [en, sn, nd]
@@ -1332,6 +1750,8 @@ components:
 
     AssistanceRequest:
       type: object
+      description: |
+        A request as the family who made it sees it. `assignment` never carries the administrator's internal note.
       required: [id, reference, kind, message, contactPreference, status, createdAt]
       properties:
         id: { type: string }
@@ -1352,7 +1772,8 @@ components:
         createdAt: { type: string, format: date-time }
         assignedTo:
           type: string
-          description: Name of the adviser handling it, once assigned.
+          description: Name of the adviser or provider handling it, once assigned. Cleared if the provider declines.
+        assignment: { $ref: '#/components/schemas/PublicRequestAssignment' }
 
     NewRequest:
       type: object
@@ -1383,7 +1804,7 @@ components:
       type: object
       required: [id, year, title]
       properties:
-        id: { type: string, description: Client-generated, unique within the memorial. }
+        id: { type: string, description: 'Client-generated, unique within the memorial.' }
         year: { type: integer, minimum: 1800, description: Up to and including the current year. }
         title: { type: string, minLength: 1, maxLength: 80 }
         text: { type: string, maxLength: 300 }
@@ -1548,3 +1969,290 @@ components:
           description: For logs and developers. The app never shows this to users.
         details:
           description: Optional structured context, e.g. field-level validation messages.
+
+    RequestStatus:
+      type: string
+      enum: [received, assigned, in_progress, complete]
+
+    AssignmentStatus:
+      type: string
+      enum: [assigned, accepted, declined, completed]
+      description: |
+        What a provider has done with a request. `assigned` -> `accepted` or `declined`; `accepted` -> `completed`.
+        The request's `status` follows: `assigned` -> `assigned`, `accepted` -> `in_progress`, `completed` ->
+        `complete`, `declined` -> `received` (nobody's again).
+
+    PublicRequestAssignment:
+      type: object
+      description: |
+        The assignment as a family sees it. It carries no `note`: the administrator's note to the provider is internal.
+      required: [providerId, providerName, status, assignedAt]
+      properties:
+        providerId: { type: string, examples: [harare-funeral-care] }
+        providerName: { type: string, examples: [Harare Funeral Care] }
+        status: { $ref: '#/components/schemas/AssignmentStatus' }
+        assignedAt: { type: string, format: date-time }
+        respondedAt:
+          type: string
+          format: date-time
+          description: When the provider answered, once they have.
+
+    RequestAssignment:
+      description: |
+        The assignment as staff see it: the family's version plus the administrator's internal `note`. Never sent
+        from `/me/requests`.
+      allOf:
+        - $ref: '#/components/schemas/PublicRequestAssignment'
+        - type: object
+          properties:
+            note:
+              type: string
+              maxLength: 500
+              description: A note from the administrator to the provider. Internal; families never see it.
+
+    StaffAssistanceRequest:
+      description: An assistance request as staff see it, with the internal assignment `note`.
+      allOf:
+        - $ref: '#/components/schemas/AssistanceRequest'
+        - type: object
+          properties:
+            assignment: { $ref: '#/components/schemas/RequestAssignment' }
+
+    ProviderRecord:
+      type: object
+      description: A funeral service provider or marketplace partner.
+      required: [id, name, providerType, contactPerson, phone, city, province, isActive, createdAt]
+      properties:
+        id:
+          type: string
+          description: The slug of the name. Also used on products' provider names and on staff accounts (`User.providerId`).
+          examples: [msasa-florists]
+        name: { type: string, examples: [Msasa Florists] }
+        providerType: { type: string, description: 'What they do: `Funeral director`, `Florist`, `Monument mason`...' }
+        contactPerson: { type: string }
+        phone: { type: string, description: E.164. }
+        email: { type: string, format: email }
+        city: { type: string }
+        province: { type: string }
+        description: { type: string }
+        isActive:
+          type: boolean
+          description: Inactive providers receive no new assignments and their products are hidden from the marketplace.
+        createdAt: { type: string, format: date-time }
+
+    AdminProvider:
+      description: A provider with their workload.
+      allOf:
+        - $ref: '#/components/schemas/ProviderRecord'
+        - type: object
+          required: [productCount, openAssignments, completedAssignments, orderCount, revenue]
+          properties:
+            productCount: { type: integer, description: Catalogue items whose provider name maps to this provider (whether or not they are switched on). }
+            openAssignments: { type: integer, description: Requests handed to them that are `assigned` or `accepted`. }
+            completedAssignments: { type: integer }
+            orderCount: { type: integer, description: Orders that include one of their products. }
+            revenue: { type: integer, description: 'Paid, not cancelled value of their share of those orders, whole US dollars.' }
+
+    NewProvider:
+      type: object
+      required: [name, providerType, contactPerson, phone, city]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 200 }
+        providerType: { type: string, maxLength: 200 }
+        contactPerson: { type: string, maxLength: 200 }
+        phone: { $ref: '#/components/schemas/Phone' }
+        email: { type: string, format: email }
+        city: { type: string, maxLength: 200 }
+        province: { type: string, maxLength: 200, description: Defaults to the city. }
+        description: { type: string, maxLength: 500 }
+
+    ProviderUpdate:
+      type: object
+      required: [isActive]
+      properties:
+        isActive: { type: boolean }
+
+    CustomerRef:
+      type: object
+      required: [id, name, phone]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        phone: { type: string, description: E.164. }
+
+    RequestAction:
+      type: string
+      enum: [assign, accepted, declined, completed]
+      description: |
+        What the caller may do with the request right now. An administrator: `assign` and `completed` while it is
+        open. A provider: the legal answers to their own assignment (`accepted` and `declined`, then `completed`).
+
+    AdminRequest:
+      description: An assistance request with who it is for and what the caller may do with it.
+      allOf:
+        - $ref: '#/components/schemas/StaffAssistanceRequest'
+        - type: object
+          required: [customer, urgent, actions]
+          properties:
+            customer:
+              description: A provider gets only `id`, `name` and `phone`; the policy fields are for administrators.
+              allOf:
+                - $ref: '#/components/schemas/CustomerRef'
+                - type: object
+                  properties:
+                    policyNumber: { type: string }
+                    policyStatus: { type: string, enum: [active, grace, lapsed] }
+            urgent: { type: boolean, description: A bereavement that nobody has taken on (`status` is `received`). }
+            actions:
+              type: array
+              items: { $ref: '#/components/schemas/RequestAction' }
+
+    AssignRequestInput:
+      type: object
+      required: [providerId]
+      properties:
+        providerId: { type: string, examples: [bulawayo-memorial-services] }
+        note:
+          type: string
+          maxLength: 500
+          description: Internal note to the provider. Families never see it.
+
+    AssignmentResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted, declined, completed]
+
+    AdminOrder:
+      description: An order with who placed it and what the caller may do with it.
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          required: [customer, scoped, actions, shared]
+          properties:
+            customer: { $ref: '#/components/schemas/CustomerRef' }
+            scoped:
+              type: boolean
+              description: True for a provider. `lines`, `subtotal`, `deliveryFee` (0) and `total` then cover only their share.
+            actions:
+              type: array
+              items: { $ref: '#/components/schemas/OrderStatus' }
+              description: The statuses the caller may move it to right now, worked out from the whole order.
+            shared:
+              type: boolean
+              description: Other providers' products are on it too, so only an administrator can move it along.
+
+    OrderStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/OrderStatus' }
+
+    AdminCustomer:
+      allOf:
+        - $ref: '#/components/schemas/CustomerRef'
+        - type: object
+          required: [requestCount, openRequests, orderCount, memorialCount, totalSpend]
+          properties:
+            email: { type: string, format: email }
+            policyNumber: { type: string }
+            policyStatus: { type: string, enum: [active, grace, lapsed] }
+            requestCount: { type: integer }
+            openRequests: { type: integer }
+            orderCount: { type: integer }
+            memorialCount: { type: integer }
+            totalSpend: { type: integer, description: 'Paid, not cancelled orders, whole US dollars.' }
+
+    AdminCustomerDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminCustomer'
+        - type: object
+          required: [requests, orders, memorials]
+          properties:
+            policy: { $ref: '#/components/schemas/Policy' }
+            requests:
+              type: array
+              description: Newest first, with the internal assignment note.
+              items: { $ref: '#/components/schemas/StaffAssistanceRequest' }
+            orders:
+              type: array
+              description: Newest first.
+              items: { $ref: '#/components/schemas/Order' }
+            memorials:
+              type: array
+              items:
+                type: object
+                required: [id, name, published, pendingTributes]
+                properties:
+                  id: { type: string }
+                  name: { type: string }
+                  published: { type: boolean }
+                  pendingTributes: { type: integer }
+
+    AuditEntry:
+      type: object
+      description: One line of the activity log. Written by the server for every mutating staff call; never edited or deleted.
+      required: [id, at, actorName, actorRole, action, entityType, entityRef, summary]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        actorName: { type: string }
+        actorRole: { type: string, examples: [admin] }
+        action: { type: string, enum: [create, update, assign] }
+        entityType: { type: string, enum: [request, order, provider] }
+        entityRef: { type: string, description: 'What it is, for people: `AR-1051`, `FS-1035`, `Harare Funeral Care`.', examples: [AR-1051] }
+        summary: { type: string, examples: [Assigned AR-1051 to Harare Funeral Care] }
+
+    PortalPage:
+      type: string
+      enum: [overview, requests, orders, customers, providers, activity]
+
+    OverviewStat:
+      type: object
+      required: [id, label, value]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        value: { type: integer }
+        money: { type: boolean, description: Show the value as money (whole US dollars). }
+        hint: { type: string }
+        tone: { type: string, enum: [default, alert, good] }
+
+    AttentionItem:
+      type: object
+      required: [id, label, detail, tone, target]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        detail: { type: string }
+        tone: { type: string, enum: [alert, warning, info] }
+        target:
+          type: object
+          description: Where to go to deal with it.
+          required: [page]
+          properties:
+            page: { $ref: '#/components/schemas/PortalPage' }
+            id: { type: string }
+
+    Overview:
+      type: object
+      required: [stats, attention, ordersByStatus, requestsOpen]
+      properties:
+        stats:
+          type: array
+          items: { $ref: '#/components/schemas/OverviewStat' }
+        attention:
+          type: array
+          items: { $ref: '#/components/schemas/AttentionItem' }
+        ordersByStatus:
+          type: array
+          description: Statuses with at least one order.
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status: { $ref: '#/components/schemas/OrderStatus' }
+              count: { type: integer }
+        requestsOpen: { type: integer }

@@ -177,61 +177,213 @@ export function advanceOrder(record: OrderRecord, now: number): OrderRecord {
   return current
 }
 
-const DAY_MS = 86_400_000
+/** What an order can be moved to next by a person (administrator or provider). */
+export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  awaiting_payment: ['cancelled'],
+  payment_failed: ['cancelled'],
+  paid: ['confirmed', 'cancelled'],
+  confirmed: ['in_progress', 'cancelled'],
+  in_progress: ['delivered', 'cancelled'],
+  delivered: [],
+  cancelled: [],
+}
 
-/** Orders the built-in demo policyholder already has, dated relative to `now`. */
-export function seedOrderRecords(now: number = Date.now()): OrderRecord[] {
-  const wreath = createOrderRecord({
+export type TransitionResult =
+  | { ok: true; record: OrderRecord }
+  | { ok: false; code: 'invalid_transition' }
+
+const MANUAL_LABELS: Record<string, string> = {
+  confirmed: 'Confirmed by',
+  in_progress: 'Preparation started by',
+  delivered: 'Delivered by',
+  cancelled: 'Cancelled by',
+}
+
+/**
+ * A person moves an order along. From then on it is theirs to manage, so the demo timer stops. `actor` is who
+ * did it, shown in the order's history ("Confirmed by Msasa Florists").
+ */
+export function applyOrderStatus(record: OrderRecord, status: OrderStatus, actor: string, now: number): TransitionResult {
+  if (!ORDER_TRANSITIONS[record.status].includes(status)) return { ok: false, code: 'invalid_transition' }
+  return {
+    ok: true,
+    record: {
+      ...record,
+      status,
+      simulate: false,
+      events: [...record.events, { at: iso(now), label: `${MANUAL_LABELS[status] ?? 'Updated by'} ${actor}` }],
+    },
+  }
+}
+
+
+type SeedOrder = {
+  ownerId: string
+  id: string
+  reference: string
+  ageHours: number
+  input: NewOrder
+  /** Where the order stands. `payment_failed` leaves the payment declined; the others are paid. */
+  status: OrderStatus
+  /** Steps after payment, as [hours after payment, label]. */
+  steps?: [number, string][]
+}
+
+const delivery = (name: string, phone: string, town: string, address: string): DeliveryDetails => ({
+  recipientName: name,
+  phone,
+  town,
+  address,
+})
+
+const seedOrderRows: SeedOrder[] = [
+  {
     ownerId: 'u-moyo',
     id: 'o-seed-1',
     reference: 'FS-1017',
-    now: now - 40 * DAY_MS,
-    simulate: false,
+    ageHours: 40 * 24,
+    status: 'delivered',
+    steps: [
+      [1, 'Confirmed by Msasa Florists'],
+      [20, 'Being prepared'],
+      [26, 'Delivered'],
+    ],
     input: {
       lines: [{ itemId: 'wreath-package', options: { size: 'large' }, quantity: 1, personalisation: 'In loving memory of Mama. Forever in our hearts.' }],
-      delivery: {
-        recipientName: 'St Mary’s Church office',
-        phone: '+263771234567',
-        town: 'Bulawayo',
-        address: 'Makokoba, Bulawayo',
-        neededBy: '2025-09-10',
-      },
+      delivery: { ...delivery('St Mary’s Church office', '+263771234567', 'Bulawayo', 'Makokoba, Bulawayo'), neededBy: '2025-09-10' },
       payment: { method: 'ecocash', ecocashNumber: '+263771234567' },
       inMemoryOf: 'Grace Nyathi',
     },
-  })
-  const stationery = createOrderRecord({
+  },
+  {
     ownerId: 'u-moyo',
     id: 'o-seed-2',
     reference: 'FS-1038',
-    now: now - 2 * DAY_MS,
-    simulate: false,
+    ageHours: 48,
+    status: 'in_progress',
+    steps: [
+      [2, 'Confirmed by Fine Print Zimbabwe'],
+      [24, 'Being prepared'],
+    ],
     input: {
       lines: [{ itemId: 'stationery-pack', options: { count: '100' }, quantity: 1, personalisation: 'In loving memory of Grace Nyathi' }],
-      delivery: { recipientName: 'Rutendo Moyo', phone: '+263771234567', town: 'Bulawayo', address: '12 Fife Street, Bulawayo' },
+      delivery: delivery('Rutendo Moyo', '+263771234567', 'Bulawayo', '12 Fife Street, Bulawayo'),
       payment: { method: 'paynow' },
     },
-  })
-  if (!wreath.ok || !stationery.ok) return []
+  },
+  {
+    ownerId: 'u-sibanda',
+    id: 'o-seed-3',
+    reference: 'FS-1035',
+    ageHours: 3,
+    status: 'paid',
+    input: {
+      lines: [{ itemId: 'wreath-package', options: { size: 'large' }, quantity: 1, personalisation: 'With deepest sympathy from the Sibanda family' }],
+      delivery: delivery('Pastor Elias Ncube', '+263774100001', 'Harare', 'Glen View Methodist Church'),
+      payment: { method: 'ecocash', ecocashNumber: '+263774100001' },
+    },
+  },
+  {
+    ownerId: 'u-chikore',
+    id: 'o-seed-4',
+    reference: 'FS-1033',
+    ageHours: 30,
+    status: 'confirmed',
+    steps: [[3, 'Confirmed by Highveld Events']],
+    input: {
+      lines: [{ itemId: 'marquee-hire', options: { guests: '100' }, quantity: 1 }],
+      delivery: delivery('Memory Chikore', '+263774100002', 'Mutare', '14 Herbert Chitepo Street'),
+      payment: { method: 'paynow' },
+    },
+  },
+  {
+    ownerId: 'u-khumalo',
+    id: 'o-seed-5',
+    reference: 'FS-1031',
+    ageHours: 20,
+    status: 'payment_failed',
+    input: {
+      lines: [{ itemId: 'video-tribute', options: { length: '5' }, quantity: 1 }],
+      delivery: delivery('Lindiwe Khumalo', '+263774100006', 'Bulawayo', 'Online delivery'),
+      payment: { method: 'ecocash', ecocashNumber: '+263780000000' },
+    },
+  },
+  {
+    ownerId: 'u-dlamini',
+    id: 'o-seed-6',
+    reference: 'FS-1029',
+    ageHours: 6 * 24,
+    status: 'in_progress',
+    steps: [
+      [4, 'Confirmed by Bulawayo Stone Works'],
+      [3 * 24, 'Preparation started by Bulawayo Stone Works'],
+    ],
+    input: {
+      lines: [{ itemId: 'granite-plaque', options: { material: 'grey', size: 'standard' }, quantity: 1, personalisation: 'Samuel Dlamini\n1950 – 2026' }],
+      delivery: delivery('Nomsa Dlamini', '+263774100003', 'Bulawayo', 'Athlone Cemetery'),
+      payment: { method: 'ecocash', ecocashNumber: '+263774100003' },
+    },
+  },
+  {
+    ownerId: 'u-ndlovu',
+    id: 'o-seed-7',
+    reference: 'FS-1026',
+    ageHours: 8,
+    status: 'paid',
+    input: {
+      lines: [
+        { itemId: 'wreath-package', options: { size: 'standard' }, quantity: 1, personalisation: 'From all of us, with love' },
+        { itemId: 'stationery-pack', options: { count: '50' }, quantity: 1, personalisation: 'In loving memory of Gogo Ndlovu' },
+      ],
+      delivery: delivery('Thabo Ndlovu', '+263774100004', 'Gweru', '22 Fourth Street'),
+      payment: { method: 'paynow' },
+    },
+  },
+  {
+    ownerId: 'u-phiri',
+    id: 'o-seed-8',
+    reference: 'FS-1022',
+    ageHours: 12 * 24,
+    status: 'delivered',
+    steps: [
+      [2, 'Confirmed by Safe Passage Logistics'],
+      [48, 'Being prepared'],
+      [9 * 24, 'Delivered'],
+    ],
+    input: {
+      lines: [{ itemId: 'repatriation-coordination', options: { region: 'sadc' }, quantity: 1 }],
+      delivery: delivery('Tendai Phiri', '+263774100005', 'Harare', 'Beitbridge border post'),
+      payment: { method: 'ecocash', ecocashNumber: '+263774100005' },
+    },
+  },
+]
 
-  const settled = (record: OrderRecord, at: number, status: OrderStatus, steps: [number, string][]): OrderRecord => {
-    const paid = resolvePayment(record, 'paid', at + 60_000)
-    return {
-      ...paid,
-      status,
-      events: [...paid.events, ...steps.map(([offset, label]) => ({ at: iso(at + offset), label }))],
+/** Orders the built-in demo customers already have, dated relative to `now`. History doesn't move on its own. */
+export function seedOrderRecords(now: number = Date.now()): OrderRecord[] {
+  const records: OrderRecord[] = []
+  for (const row of seedOrderRows) {
+    const placedAt = now - row.ageHours * 3_600_000
+    const created = createOrderRecord({
+      ownerId: row.ownerId,
+      id: row.id,
+      reference: row.reference,
+      now: placedAt,
+      simulate: false,
+      input: row.input,
+    })
+    if (!created.ok) continue
+
+    if (row.status === 'payment_failed') {
+      records.push(resolvePayment(created.record, 'failed', placedAt + 60_000))
+      continue
     }
+    const paidAt = placedAt + 60_000
+    const paid = resolvePayment(created.record, 'paid', paidAt)
+    records.push({
+      ...paid,
+      status: row.status,
+      events: [...paid.events, ...(row.steps ?? []).map(([hours, label]) => ({ at: iso(paidAt + hours * 3_600_000), label }))],
+    })
   }
-
-  return [
-    settled(wreath.record, now - 40 * DAY_MS, 'delivered', [
-      [3_600_000, 'Confirmed by Msasa Florists'],
-      [20 * 3_600_000, 'Being prepared'],
-      [26 * 3_600_000, 'Delivered'],
-    ]),
-    settled(stationery.record, now - 2 * DAY_MS, 'in_progress', [
-      [2 * 3_600_000, 'Confirmed by Fine Print Zimbabwe'],
-      [DAY_MS, 'Being prepared'],
-    ]),
-  ]
+  return records
 }

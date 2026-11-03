@@ -1,13 +1,13 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PRIVATE_QUERY_ROOT } from '@/features/auth'
-import { seedInMockMode } from '@/lib/mock'
-import { createOrder, getOrder, listMarketplaceItems, listOrders, payOrder, resolveHostedPayment } from './api'
-import { marketplaceItems, type Order } from './data'
+import { env } from '@/lib/env'
+import { createOrder, getOrder, listMarketplaceItems, listOrders, payOrder, resolveHostedPayment, visibleCatalogue } from './api'
+import type { Order } from './data'
 
 const marketplaceItemsQuery = queryOptions({
   queryKey: ['marketplace', 'items'],
   queryFn: ({ signal }) => listMarketplaceItems(signal),
-  initialData: seedInMockMode(marketplaceItems),
+  initialData: () => (env.useMock ? visibleCatalogue() : undefined),
 })
 
 export const useMarketplaceItems = () => useQuery(marketplaceItemsQuery)

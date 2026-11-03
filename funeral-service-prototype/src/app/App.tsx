@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AccountLayout } from '@/components/layout/AccountLayout'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { HomeLayout } from '@/components/layout/HomeLayout'
-import { ProviderLayout } from '@/components/layout/ProviderLayout'
+import { PortalLayout } from '@/components/layout/PortalLayout'
 import { paths } from '@/config/routes'
 import { AuthProvider, RequireAuth } from '@/features/auth'
 import { CartDrawer } from '@/features/marketplace'
@@ -14,7 +14,12 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { NotFoundPage } from './NotFoundPage'
 import { RouteEffects } from './RouteEffects'
 
-const ProviderPortalPage = lazy(() => import('@/features/provider/ProviderPortalPage'))
+const PortalOverviewPage = lazy(() => import('@/features/admin/OverviewPage'))
+const PortalRequestsPage = lazy(() => import('@/features/admin/RequestsPage'))
+const PortalOrdersPage = lazy(() => import('@/features/admin/OrdersPage'))
+const PortalCustomersPage = lazy(() => import('@/features/admin/CustomersPage'))
+const PortalProvidersPage = lazy(() => import('@/features/admin/ProvidersPage'))
+const PortalActivityPage = lazy(() => import('@/features/admin/ActivityPage'))
 const LoginPage = lazy(() => import('@/features/account/LoginPage'))
 const SignupPage = lazy(() => import('@/features/account/SignupPage'))
 const DashboardPage = lazy(() => import('@/features/account/DashboardPage'))
@@ -68,9 +73,16 @@ export function App() {
                 </Route>
               </Route>
 
-              <Route element={<RequireAuth roles={['provider', 'staff', 'admin']} />}>
-                <Route element={<ProviderLayout />}>
-                  <Route path={paths.provider} element={<ProviderPortalPage />} />
+              <Route element={<RequireAuth roles={['provider', 'admin']} />}>
+                <Route element={<PortalLayout />}>
+                  <Route path={paths.provider} element={<PortalOverviewPage />} />
+                  <Route path={paths.portalRequests} element={<PortalRequestsPage />} />
+                  <Route path={paths.portalOrders} element={<PortalOrdersPage />} />
+                  <Route element={<RequireAuth roles={['admin']} />}>
+                    <Route path={paths.portalCustomers} element={<PortalCustomersPage />} />
+                    <Route path={paths.portalProviders} element={<PortalProvidersPage />} />
+                    <Route path={paths.portalActivity} element={<PortalActivityPage />} />
+                  </Route>
                 </Route>
               </Route>
             </Routes>

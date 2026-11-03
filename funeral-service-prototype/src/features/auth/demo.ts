@@ -29,10 +29,44 @@ export const demoPersonas: DemoPersona[] = [
     blurb: 'No policy yet. Starts from a quote.',
   },
   {
-    user: { id: 'u-dube', name: 'Chipo Dube', phone: '+263773000222', role: 'provider', language: 'en' },
-    title: 'Provider staff',
-    blurb: 'Opens the provider portal concept.',
+    user: { id: 'u-ndlovu-admin', name: 'Nomsa Ndlovu', phone: '+263773000333', role: 'admin', language: 'en' },
+    title: 'Administrator',
+    blurb: 'Triages requests, assigns providers and sees everything.',
+  },
+  {
+    user: {
+      id: 'u-dube',
+      name: 'Chipo Dube',
+      phone: '+263773000222',
+      role: 'provider',
+      providerId: 'harare-funeral-care',
+      language: 'en',
+    },
+    title: 'Funeral provider',
+    blurb: 'Harare Funeral Care. Has requests waiting to be accepted.',
+  },
+  {
+    user: {
+      id: 'u-chigumba',
+      name: 'Farai Chigumba',
+      phone: '+263773000444',
+      role: 'provider',
+      providerId: 'msasa-florists',
+      language: 'en',
+    },
+    title: 'Marketplace vendor',
+    blurb: 'Msasa Florists. Confirms and delivers flower orders.',
   },
 ]
 
-export const demoUsers: User[] = demoPersonas.map((persona) => persona.user)
+/** More customers, so the administrator's tables have something to show. They can sign in like anyone else. */
+export const extraDemoUsers: User[] = [
+  { id: 'u-sibanda', name: 'Brian Sibanda', phone: '+263774100001', role: 'customer', language: 'en' },
+  { id: 'u-chikore', name: 'Memory Chikore', phone: '+263774100002', email: 'memory.chikore@example.com', role: 'customer', language: 'sn' },
+  { id: 'u-dlamini', name: 'Nomsa Dlamini', phone: '+263774100003', role: 'customer', language: 'nd' },
+  { id: 'u-ndlovu', name: 'Thabo Ndlovu', phone: '+263774100004', role: 'customer', language: 'nd' },
+  { id: 'u-phiri', name: 'Tendai Phiri', phone: '+263774100005', role: 'customer', language: 'en' },
+  { id: 'u-khumalo', name: 'Lindiwe Khumalo', phone: '+263774100006', email: 'lindiwe.k@example.com', role: 'customer', language: 'en' },
+]
+
+export const demoUsers: User[] = [...demoPersonas.map((persona) => persona.user), ...extraDemoUsers]

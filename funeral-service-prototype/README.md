@@ -53,15 +53,21 @@ Customers sign in with their mobile number and a one-time code, with no password
 - **Manage memorials** they have created: story, photos, tributes and sharing.
 - **Keep their profile** up to date.
 
-## For funeral providers
+## For the team behind it
 
-A provider portal, for provider staff and administrators who sign in, shows how funeral professionals could manage the services they run for families.
+A staff portal at `/provider-portal` for administrators and funeral service providers. What each person sees depends on who they are:
+
+- **Administrators** see every family and every request. Urgent requests (a bereavement nobody has taken on) are at the top. They assign a request to a funeral service provider, follow orders, look up any customer, add or switch off providers, and read an activity log of every change.
+- **Funeral providers** (a funeral director, for example) see only the requests handed to them, and accept, decline or complete each one. The family sees the progress, but never the internal note an administrator wrote.
+- **Marketplace vendors** (a florist, a stonemason) see only the orders that include their products, and confirm, prepare and deliver them. An order shared with another vendor is coordinated by an administrator.
+
+Switching a provider off stops new requests going to them and hides their products from the marketplace.
 
 ## Trying the demo
 
 Run `npm install` and then `npm run dev`, and open the address it prints.
 
-- On the sign-in page, pick one of the **demo personas** (a policyholder, a new family or provider staff) to get in with one click.
+- On the sign-in page, pick one of the **demo personas** to get in with one click: a policyholder, a new family, an administrator, a funeral provider and a marketplace vendor.
 - The one-time code is always `123456`.
 - To link a policy by hand, use policy number `FLA-318227` with ID `08-765432-B-15`.
 - Everything you do is saved in your own browser only.

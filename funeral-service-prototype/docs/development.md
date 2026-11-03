@@ -13,7 +13,7 @@ npm test         # vitest (unit tests)
 
 With `VITE_API_MODE=live` the screens talk to the API in [`openapi.yaml`](openapi.yaml); `npm run mock-api` is a reference server for it (see [`backend-integration.md`](backend-integration.md)). The demo personas are hidden in live mode.
 
-Feature layout: `features/auth` is the session (types, API calls, route guard, hooks), `features/account` is the customer's policy and requests, `features/memorials` is the public memorial pages and the owner's editor, and `features/marketplace` is the shop, basket, checkout and orders. Other features import each other only through their `index.ts` (for example `@/features/auth`).
+Feature layout: `features/auth` is the session (types, API calls, route guard, hooks), `features/account` is the customer's policy and requests, `features/memorials` is the public memorial pages and the owner's editor, and `features/marketplace` is the shop, basket, checkout and orders, and `features/admin` is the staff portal. Other features import each other only through their `index.ts` (for example `@/features/auth`).
 
 ### Marketplace and orders
 
@@ -23,6 +23,14 @@ Feature layout: `features/auth` is the session (types, API calls, route guard, h
 - **Mock payments.** In mock mode any 077 or 078 EcoCash number is approved after a few seconds, `078 000 0000` is always declined, and Paynow shows a stand-in for its hosted page. A real integration needs gateway credentials, signed webhooks and idempotency keys (see `backend-integration.md`).
 - **Basket.** `cart.ts` is a small external store backed by `localStorage`, read through `useSyncExternalStore`, so the header button, the drawer and product pages share it without a provider.
 
+
+### Staff portal
+
+- **Three kinds of people, one shell.** `AppShell` is the frame for every signed-in area; `AccountLayout` and `PortalLayout` only choose its navigation. The portal's navigation (`portalNav` in `config/site.ts`) depends on the role.
+- **Rules live in pure modules.** `admin/logic.ts` (who may do what, the overview numbers), `account/request-flow.ts` (the assignment lifecycle) and `marketplace/order-flow.ts` (order moves) take time as an argument and import only relative `.ts` files, so the browser mock and `scripts/mock-api.mjs` use the same code. The server must enforce the same rules; the UI hides actions only as a convenience.
+- **What a response carries.** Each request and order comes back with the actions the caller may take (`actions`), decided on the server, so the screen never works out permissions for itself.
+- **The mock server is one server.** `admin/mock-store.ts` reads and updates the other features' mock tables directly (the one place features reach into each other's mock stores). Everything is loaded on demand, so a live build never fetches it.
+- **Audit trail.** Every change made through the portal appends an entry to the activity log; the log is append-only.
 
 ## Code structure
 

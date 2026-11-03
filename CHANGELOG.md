@@ -1,0 +1,66 @@
+# Changelog
+
+What changed in the front end (`funeral-service-prototype/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `funeral-service-prototype/docs/openapi.yaml` and a reference server is `npm run mock-api`.
+
+## Phase 4: staff portal (uncommitted at the time of writing)
+
+**Added**
+- A staff portal at `/provider-portal` with an overview, requests, orders, customers, providers and an activity log. It replaces the old stat-card stub.
+- Three roles with different views: **administrator** (everything), **funeral provider** (only requests handed to them) and **marketplace vendor** (only orders with their products).
+- Assigning a request to a funeral service provider. Providers accept, decline or complete it; families see the progress. An internal note from the administrator is never shown to the family.
+- Moving orders along (confirm, start preparing, deliver, cancel). A provider can only manage orders that are wholly theirs; shared orders are coordinated by an administrator.
+- A provider directory: add a provider, or switch one off. A switched-off provider gets no new requests and its products disappear from the marketplace.
+- An append-only activity log of every change made in the portal.
+- Demo sign-ins for an administrator, a funeral provider and a marketplace vendor, plus six more demo customers so the tables have something in them.
+- API: `/admin/*` endpoints (overview, requests and assignments, orders, customers, providers, activity), role rules, and a mapping to the backend's Prisma models in `docs/backend-integration.md`.
+
+**Changed**
+- Every signed-in area now shares one frame (`AppShell`). The mobile tab bar adapts to the number of items.
+- A request now carries an optional `assignment`; orders can be moved by people as well as by the demo timer.
+- The no-access page is generic ("This page isn't available to your account").
+- The footer link "Provider concept" is now "Staff portal".
+
+**Fixed**
+- A vendor's overview listed an order shared with another vendor as "ready to confirm" although they could not act on it.
+
+## Phase 3: marketplace and orders
+
+**Added**
+- `/marketplace` with category filters, search and sorting, and product pages with options (material, size, quantity), personal wording and a live price.
+- A slide-in basket that survives reloads and signing in.
+- Checkout with delivery details and EcoCash or Paynow (both simulated).
+- Orders: payment states (waiting for the EcoCash prompt, a stand-in for Paynow's page, retry after a failure) and tracking from paid to delivered, with a history.
+- "Send flowers" and "order a remembrance plaque" links from a memorial, which prefill the card message and mark the order as in memory of that person.
+- An Orders entry in the account and an Orders card on the dashboard.
+- Prices are always worked out by the server; the browser only sends choices. The order lifecycle is shared by the browser mock and the reference server.
+
+**Changed**
+- The home page's marketplace section uses the new product cards and links to the full marketplace.
+
+## Phase 2: memorials
+
+**Added**
+- Public memorial pages at `/memorials/<slug>`: portrait or initials, life story, timeline, photo gallery with a full-screen viewer, service details, share buttons, flowers and candles, and a tribute wall.
+- An owner's editor in the account: details, story and timeline, photos (resized in the browser), tribute moderation, sharing and publishing. A memorial stays private until published.
+- Tributes from visitors wait for the family's approval. Unpublished memorials are visible to their owner only.
+- A sample memorial at `/memorials/grace-nyathi` and a Memorials card on the dashboard.
+
+**Changed**
+- Shared page styles moved to `src/styles/app-screens.css`; page titles follow the route, including dynamic ones.
+
+## Phase 1: accounts and customer dashboard
+
+**Added**
+- Sign in and sign up with a mobile number and a one-time code (`123456` in demo mode), with one-click demo personas.
+- Optional policy linking, and an `/account` area: overview, policy, requests and profile.
+- Route guards (`RequireAuth`) with a safe return to where the person was headed.
+- A warmer, gold-accented design: new tokens, an icon set, skeleton loaders, status chips, a progress ring.
+- API contract for accounts, and a reference server with cookie sessions.
+
+**Changed**
+- The provider area now needs a sign-in.
+
+## Before the phases
+
+- A feature-based architecture with real routing, and the API, mock and query layers.
+- The original landing-page prototype.

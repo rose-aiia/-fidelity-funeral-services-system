@@ -1,13 +1,13 @@
 import { ApiError } from '@/lib/api-error'
 import type { AssistanceRequest, NewRequest, Policy } from './data'
 import { MESSAGE_MAX_LENGTH, REQUEST_KINDS } from './data'
-import { demoPolicyLinks, demoRequestsFor, findPolicyByNumber, findPolicyRecord } from './policy-records'
+import { demoPolicyLinks, findPolicyByNumber, findPolicyRecord, seedRequests } from './policy-records'
 
 // The "server" behind account endpoints in mock mode. Per-user links and requests persist in localStorage.
 // Loaded on demand (dynamic import) so it never ships in the path a live build runs.
 
 const LINKS_KEY = 'fidelity.mock.policyLinks'
-const REQUESTS_KEY = 'fidelity.mock.requests'
+const REQUESTS_KEY = 'fidelity.mock.requestStore'
 const MAX_LINK_ATTEMPTS = 5
 
 const failedLinkAttempts = new Map<string, number>()
@@ -52,12 +52,19 @@ export function linkPolicy(userId: string, policyNumber: string, idNumber: strin
   return record.policy
 }
 
-function storedRequests(userId: string): AssistanceRequest[] {
-  return readJson<Record<string, AssistanceRequest[]>>(REQUESTS_KEY, {})[userId] ?? []
+/** Every request, by the user who made it. Seeded on first use; the staff portal changes them through here too. */
+const readStore = (): Record<string, AssistanceRequest[]> =>
+  readJson<Record<string, AssistanceRequest[]> | null>(REQUESTS_KEY, null) ?? seedRequests()
+
+/** The internal note an administrator leaves for a provider is never shown to the family. */
+function forFamily(request: AssistanceRequest): AssistanceRequest {
+  if (!request.assignment) return request
+  const { note: _note, ...assignment } = request.assignment
+  return { ...request, assignment }
 }
 
 export function listRequests(userId: string): AssistanceRequest[] {
-  return [...storedRequests(userId), ...demoRequestsFor(userId)].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  return (readStore()[userId] ?? []).map(forFamily).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export function createRequest(userId: string, input: NewRequest): AssistanceRequest {
@@ -79,7 +86,22 @@ export function createRequest(userId: string, input: NewRequest): AssistanceRequ
     createdAt: new Date().toISOString(),
   }
 
-  const all = readJson<Record<string, AssistanceRequest[]>>(REQUESTS_KEY, {})
+  const all = readStore()
   writeJson(REQUESTS_KEY, { ...all, [userId]: [request, ...(all[userId] ?? [])] })
   return request
+}
+
+// --- the staff portal reads and updates every family's requests (the mock server is one server) ---
+
+export type OwnedRequest = { userId: string; request: AssistanceRequest }
+
+export const listAllRequests = (): OwnedRequest[] =>
+  Object.entries(readStore()).flatMap(([userId, requests]) => requests.map((request) => ({ userId, request })))
+
+export function saveRequest(userId: string, request: AssistanceRequest): void {
+  const all = readStore()
+  writeJson(REQUESTS_KEY, {
+    ...all,
+    [userId]: (all[userId] ?? []).map((candidate) => (candidate.id === request.id ? request : candidate)),
+  })
 }

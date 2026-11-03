@@ -9,6 +9,8 @@ export type User = {
   phone: string
   email?: string
   role: Role
+  /** For `provider` users: the funeral service provider they work for. */
+  providerId?: string
   language: Language
 }
 

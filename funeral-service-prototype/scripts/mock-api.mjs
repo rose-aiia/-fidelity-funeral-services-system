@@ -3,7 +3,12 @@
 // Needs Node 22.18+ (it imports the app's .ts data, pricing, order-flow, account and memorial modules directly).
 //
 // Accounts: sign in with a demo phone number (listed at startup) and the code 123456. Sessions, users, policy
-// links, requests, memorials and marketplace orders live in memory and reset when the server restarts.
+// links, requests, memorials, marketplace orders, the provider directory and the activity log live in memory and
+// reset when the server restarts.
+//
+// Staff portal: /admin/* serves administrators (everything) and providers (only what concerns them). The rules live
+// in features/admin/logic.ts and features/account/request-flow.ts, shared with the browser mock; this file only
+// enforces them per caller. Providers are scoped by the providerId on their account, never by anything they send.
 //
 // Orders: payments are simulated. EcoCash and Paynow both settle by themselves about 4 seconds after they start
 // (a real Paynow payment would hand the buyer a hosted page); EcoCash 0780000000 is always declined. A paid order
@@ -14,12 +19,27 @@
 //   curl 'localhost:8080/__fail?on=0'   back to normal
 import { randomBytes } from 'node:crypto'
 import http from 'node:http'
-import { demoPolicyLinks, demoRequestsFor, findPolicyByNumber, findPolicyRecord, policyRecords } from '../src/features/account/policy-records.ts'
+import { demoPolicyLinks, findPolicyByNumber, findPolicyRecord, policyRecords, seedRequests } from '../src/features/account/policy-records.ts'
+import { assignRequest, completeRequest, isOpen, isUrgent, respondToAssignment, sortForTriage } from '../src/features/account/request-flow.ts'
+import {
+  activeCatalogue,
+  auditEntry,
+  buildOverview,
+  earnedValue,
+  isSharedOrder,
+  orderActionsFor,
+  orderTouchesProvider,
+  providerIdFor,
+  requestActionsFor,
+  scopeOrderForProvider,
+  validateNewProvider,
+} from '../src/features/admin/logic.ts'
+import { seedProviders } from '../src/features/admin/providers-seed.ts'
 import { DEMO_OTP, demoUsers } from '../src/features/auth/demo.ts'
 import { isEmail, isOtpCode, normalisePhone } from '../src/features/auth/validation.ts'
 import { faqs } from '../src/features/faq/data.ts'
 import { marketplaceItems } from '../src/features/marketplace/data.ts'
-import { advanceOrder, createOrderRecord, seedOrderRecords, startPayment, toPublicOrder } from '../src/features/marketplace/order-flow.ts'
+import { advanceOrder, applyOrderStatus, createOrderRecord, ORDER_TRANSITIONS, seedOrderRecords, startPayment, toPublicOrder } from '../src/features/marketplace/order-flow.ts'
 import { hasErrors, validateDelivery, validatePayment } from '../src/features/marketplace/validation.ts'
 import {
   approvedTributes,
@@ -60,6 +80,14 @@ const PHOTO_DATA_URL = /^data:image\/(jpeg|png|webp|svg\+xml)(;[\w=.+-]+)*,/
 const TRIBUTES_PER_HOUR = 5
 const OFFERINGS_PER_DAY = 20
 const ORDERS_PER_HOUR = 10
+const PROVIDERS_PER_HOUR = 20
+const ACTIVITY_LIMIT = 100
+const ASSIGNMENT_NOTE_MAX_LENGTH = 500
+const PROVIDER_TEXT_MAX_LENGTH = 200
+const PROVIDER_DESCRIPTION_MAX_LENGTH = 500
+const ORDER_STATUSES = ['awaiting_payment', 'payment_failed', 'paid', 'confirmed', 'in_progress', 'delivered', 'cancelled']
+const REQUEST_STATUSES = ['received', 'assigned', 'in_progress', 'complete']
+const STAFF_ACTOR = 'Zimbabwe Funeral Service' // who an administrator's order changes are attributed to in the order's history
 const HOUR_MS = 3_600_000
 const DAY_MS = 86_400_000
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -67,18 +95,19 @@ const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{
 
 let failing = false
 let nextReference = 1001
-let nextRequestNumber = 1043 // the seeded demo request is AR-1042
+let nextRequestNumber = 1 // set from the seed below
 let nextUserNumber = 1
 let nextMemorialNumber = 1
 let nextPhotoNumber = 1
 let nextTributeNumber = 1
-let nextOrderNumber = 1039 // the seeded orders are FS-1017 and FS-1038
+let nextOrderNumber = 1 // set from the seed below
+let nextAuditNumber = 1
 
 // Accounts, all in memory.
 const users = new Map(demoUsers.map((user) => [user.phone, { ...user }])) // phone -> User
 const sessions = new Map() // sid -> user id
 const policyLinks = new Map(Object.entries(demoPolicyLinks)) // user id -> policy number
-const requestsByUser = new Map() // user id -> AssistanceRequest[]
+const requestsByUser = new Map(Object.entries(structuredClone(seedRequests()))) // user id -> AssistanceRequest[], internal assignment notes included
 const codeFailures = new Map() // phone -> failed code attempts
 const linkFailures = new Map() // user id -> failed policy-link attempts
 
@@ -91,6 +120,30 @@ const offeringHits = new Map() // `${memorial id}|${visitor}` -> timestamps of r
 // Marketplace orders, all in memory. Records include ownerId and the settlement state; toPublicOrder strips them.
 const orderRecords = new Map(seedOrderRecords().map((record) => [record.id, record])) // order id -> OrderRecord
 const orderHits = new Map() // user id -> timestamps of recent orders
+const providerHits = new Map() // user id -> timestamps of recent provider creations
+
+// Reference counters continue after the highest seeded reference, whatever the seed contains.
+const highestIn = (references, prefix) => Math.max(1000, ...references.map((reference) => Number(reference.slice(prefix.length + 1)) || 0))
+nextOrderNumber = highestIn([...orderRecords.values()].map((order) => order.reference), 'FS') + 1
+nextRequestNumber = highestIn([...requestsByUser.values()].flat().map((request) => request.reference), 'AR') + 1
+
+// Staff portal, all in memory.
+const providers = new Map(seedProviders().map((provider) => [provider.id, provider])) // provider id -> ProviderRecord
+const auditLog = [] // AuditEntry[], newest first, append-only
+
+const logAudit = (at, actor, action, entityType, entityRef, summary) => {
+  auditLog.unshift(auditEntry(`au-${nextAuditNumber++}`, at, actor, action, entityType, entityRef, summary))
+}
+{
+  const hoursAgo = (count) => Date.now() - count * 3_600_000
+  // Added oldest first, so the log reads newest first.
+  logAudit(hoursAgo(47), { name: 'Nomsa Ndlovu', role: 'admin' }, 'assign', 'request', 'AR-1042', 'Assigned AR-1042 to Harare Funeral Care')
+  logAudit(hoursAgo(27), { name: 'Sibusiso Moyo', role: 'provider' }, 'update', 'request', 'AR-1047', 'Accepted AR-1047')
+  logAudit(hoursAgo(19), { name: 'Nomsa Ndlovu', role: 'admin' }, 'assign', 'request', 'AR-1049', 'Assigned AR-1049 to Harare Funeral Care')
+}
+
+// The catalogue families can buy from: products of switched-off providers are hidden and can't be ordered.
+const currentCatalogue = () => activeCatalogue(marketplaceItems, [...providers.values()].filter((provider) => !provider.isActive).map((provider) => provider.id))
 
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, { 'Content-Type': 'application/json', ...headers })
@@ -139,8 +192,15 @@ const policyFor = (userId) => {
 }
 
 const requestsFor = (userId) => {
-  if (!requestsByUser.has(userId)) requestsByUser.set(userId, demoRequestsFor(userId))
+  if (!requestsByUser.has(userId)) requestsByUser.set(userId, [])
   return requestsByUser.get(userId)
+}
+
+// What a family sees of a request: never the administrator's internal note to the provider.
+const customerRequest = ({ assignment, ...request }) => {
+  if (!assignment) return request
+  const { note: _note, ...visible } = assignment
+  return { ...request, assignment: visible }
 }
 
 // Returns true once it has answered the request.
@@ -250,7 +310,7 @@ async function handleAccount(req, res, pathname) {
   }
 
   if (method === 'GET' && pathname === '/me/requests') {
-    return send(res, 200, [...requestsFor(user.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt))), true
+    return send(res, 200, [...requestsFor(user.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(customerRequest)), true
   }
 
   // POST /me/requests
@@ -274,7 +334,7 @@ async function handleAccount(req, res, pathname) {
     createdAt: new Date().toISOString(),
   }
   requestsFor(user.id).unshift(request)
-  return send(res, 201, request), true
+  return send(res, 201, customerRequest(request)), true
 }
 
 // ---- Memorials ---------------------------------------------------------------------------------------------------
@@ -747,6 +807,7 @@ async function handleOrders(req, res, pathname) {
       input: { lines, delivery: { ...delivery, phone: normalisePhone(delivery.phone) ?? delivery.phone }, payment, inMemoryOf: body.inMemoryOf ?? undefined },
       now: Date.now(),
       simulate: true,
+      catalogue: currentCatalogue(),
     })
     if (!Array.isArray(body.lines)) errors.lines = 'Send a list of items'
     else if (!pricing.ok) Object.assign(errors, pricing.details)
@@ -784,6 +845,363 @@ async function handleOrders(req, res, pathname) {
   return send(res, 200, toPublicOrder(next)), true
 }
 
+// ---- Staff portal ------------------------------------------------------------------------------------------------
+
+const forbidden = (res, message = 'Not allowed') => problem(res, 403, 'forbidden', message)
+const notFound = (res, what) => problem(res, 404, 'not_found', `No such ${what}`)
+
+const usersById = () => new Map([...users.values()].map((user) => [user.id, user]))
+const isCustomer = (user) => user.role === 'customer'
+
+const requestOwners = () => {
+  const owners = {}
+  for (const [userId, list] of requestsByUser) for (const request of list) owners[request.id] = userId
+  return owners
+}
+
+const customerRef = (user) => ({ id: user?.id ?? '', name: user?.name ?? 'Unknown customer', phone: user?.phone ?? '' })
+
+const everyRequest = () => [...requestsByUser.values()].flat()
+
+// Replaces a stored request, wherever it lives.
+function saveRequest(next) {
+  for (const list of requestsByUser.values()) {
+    const index = list.findIndex((request) => request.id === next.id)
+    if (index !== -1) {
+      list[index] = next
+      return
+    }
+  }
+}
+
+// The requests this caller may see: an administrator sees all, a provider only those assigned to them.
+const requestsVisibleTo = (actor) =>
+  everyRequest().filter((request) => actor.role === 'admin' || request.assignment?.providerId === actor.providerId)
+
+// Providers get the customer's name and phone, never policy details.
+function adminRequest(request, actor, owners, byId) {
+  const owner = byId.get(owners[request.id])
+  const policy = actor.role === 'admin' && owner ? policyFor(owner.id) : undefined
+  return {
+    ...request,
+    customer: { ...customerRef(owner), ...(policy && { policyNumber: policy.number, policyStatus: policy.status }) },
+    urgent: isUrgent(request),
+    actions: requestActionsFor(request, actor.role, actor.providerId),
+  }
+}
+
+// Orders are brought up to date on read, like /me/orders.
+const allOrders = () => [...orderRecords.values()].map(currentOrder)
+
+function adminOrder(record, actor, byId) {
+  const order = toPublicOrder(record)
+  const name = actor.providerName
+  return {
+    ...(actor.role === 'admin' ? order : scopeOrderForProvider(order, name)),
+    customer: customerRef(byId.get(record.ownerId)),
+    scoped: actor.role !== 'admin',
+    actions: orderActionsFor(order, actor.role, name),
+    shared: isSharedOrder(order, name),
+  }
+}
+
+// Orders this caller may see, as public orders (unscoped), newest first.
+const ordersVisibleTo = (actor) =>
+  allOrders()
+    .filter((record) => actor.role === 'admin' || orderTouchesProvider(record, actor.providerName))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+const productCountFor = (providerId) => marketplaceItems.filter((item) => item.provider && providerIdFor(item.provider) === providerId).length
+
+function adminProvider(provider, requests, orders) {
+  const theirs = requests.filter((request) => request.assignment?.providerId === provider.id)
+  const touching = orders.filter((order) => orderTouchesProvider(order, provider.name))
+  return {
+    ...provider,
+    productCount: productCountFor(provider.id),
+    openAssignments: theirs.filter((request) => request.assignment.status === 'assigned' || request.assignment.status === 'accepted').length,
+    completedAssignments: theirs.filter((request) => request.assignment.status === 'completed').length,
+    orderCount: touching.length,
+    revenue: touching.reduce((sum, order) => sum + earnedValue(scopeOrderForProvider(toPublicOrder(order), provider.name)), 0),
+  }
+}
+
+function adminCustomer(user) {
+  const requests = requestsFor(user.id)
+  const orders = allOrders().filter((order) => order.ownerId === user.id)
+  const policy = policyFor(user.id)
+  return {
+    ...customerRef(user),
+    ...(user.email && { email: user.email }),
+    ...(policy && { policyNumber: policy.number, policyStatus: policy.status }),
+    requestCount: requests.length,
+    openRequests: requests.filter(isOpen).length,
+    orderCount: orders.length,
+    memorialCount: memorials.filter((memorial) => memorial.ownerId === user.id).length,
+    totalSpend: orders.reduce((sum, order) => sum + earnedValue(order), 0),
+  }
+}
+
+const orderStatusLabel = { awaiting_payment: 'Awaiting payment', payment_failed: 'Payment failed', paid: 'Paid', confirmed: 'Confirmed', in_progress: 'In progress', delivered: 'Delivered', cancelled: 'Cancelled' }
+
+const text = (value) => (typeof value === 'string' ? value.trim() : '')
+
+// Returns true once it has answered the request.
+async function handleAdmin(req, res, pathname, searchParams) {
+  const { method } = req
+  const routes = {
+    overview: ['GET', '/admin/overview'],
+    listRequests: ['GET', '/admin/requests'],
+    getRequest: ['GET', '/admin/requests/:id'],
+    assign: ['POST', '/admin/requests/:id/assignment'],
+    respond: ['PATCH', '/admin/requests/:id/assignment'],
+    listOrders: ['GET', '/admin/orders'],
+    updateOrder: ['PATCH', '/admin/orders/:id'],
+    listCustomers: ['GET', '/admin/customers'],
+    getCustomer: ['GET', '/admin/customers/:id'],
+    listProviders: ['GET', '/admin/providers'],
+    createProvider: ['POST', '/admin/providers'],
+    updateProvider: ['PATCH', '/admin/providers/:id'],
+    activity: ['GET', '/admin/activity'],
+  }
+  let route
+  let params
+  for (const [name, [routeMethod, pattern]] of Object.entries(routes)) {
+    params = routeMethod === method ? matchPath(pattern, pathname) : null
+    if (params) {
+      route = name
+      break
+    }
+  }
+  if (!route) return false
+
+  const user = sessionUser(req)
+  if (!user) return problem(res, 401, 'unauthenticated', 'Sign in required'), true
+  // The role comes from the server's own record of the signed-in user, never from the request.
+  if (user.role !== 'admin' && !(user.role === 'provider' && user.providerId && providers.has(user.providerId))) {
+    return forbidden(res), true
+  }
+  const actor = {
+    user,
+    name: user.name,
+    role: user.role === 'admin' ? 'admin' : 'provider',
+    providerId: user.role === 'provider' ? user.providerId : undefined,
+    providerName: user.role === 'provider' ? providers.get(user.providerId).name : undefined,
+  }
+  const audit = { name: user.name, role: user.role }
+  const adminOnly = ['assign', 'listCustomers', 'getCustomer', 'listProviders', 'createProvider', 'updateProvider', 'activity']
+  if (actor.role !== 'admin' && adminOnly.includes(route)) return forbidden(res, 'Administrators only'), true
+
+  const byId = usersById()
+  const owners = requestOwners()
+
+  if (route === 'overview') {
+    const requests = requestsVisibleTo(actor)
+    const orders = ordersVisibleTo(actor).map((record) => toPublicOrder(record))
+    const customerNames = Object.fromEntries([...byId.values()].filter(isCustomer).map((customer) => [customer.id, customer.name]))
+    const visibleOwners = Object.fromEntries(requests.map((request) => [request.id, owners[request.id]]))
+    return (
+      send(
+        res,
+        200,
+        buildOverview({
+          role: actor.role,
+          providerId: actor.providerId,
+          providerName: actor.providerName,
+          requests,
+          orders,
+          customerCount: [...byId.values()].filter(isCustomer).length,
+          activeProviders: [...providers.values()].filter((provider) => provider.isActive).length,
+          customerNames,
+          requestOwners: visibleOwners,
+        }),
+      ),
+      true
+    )
+  }
+
+  // ---- requests
+  if (route === 'listRequests') {
+    const status = searchParams.get('status')
+    if (status !== null && !REQUEST_STATUSES.includes(status)) return invalid(res, { status: 'Unknown status' }), true
+    const requests = requestsVisibleTo(actor).filter((request) => !status || request.status === status)
+    return send(res, 200, sortForTriage(requests).map((request) => adminRequest(request, actor, owners, byId))), true
+  }
+
+  if (['getRequest', 'assign', 'respond'].includes(route)) {
+    // A provider asking about someone else's request is told it doesn't exist.
+    const request = everyRequest().find((candidate) => candidate.id === params.id)
+    if (!request || (actor.role === 'provider' && request.assignment?.providerId !== actor.providerId)) return notFound(res, 'request'), true
+
+    if (route === 'getRequest') return send(res, 200, adminRequest(request, actor, owners, byId)), true
+
+    const body = await readJson(req).catch(() => null)
+    const now = Date.now()
+
+    if (route === 'assign') {
+      const providerId = text(body?.providerId)
+      const note = body?.note
+      const errors = {}
+      if (!providerId || !providers.has(providerId)) errors.providerId = 'Choose a provider from the directory'
+      if (note !== undefined && note !== null && typeof note !== 'string') errors.note = 'Enter text'
+      else if (typeof note === 'string' && note.trim().length > ASSIGNMENT_NOTE_MAX_LENGTH) errors.note = `Keep it under ${ASSIGNMENT_NOTE_MAX_LENGTH} characters`
+      if (Object.keys(errors).length) return invalid(res, errors), true
+      const provider = providers.get(providerId)
+      if (!provider.isActive) return problem(res, 409, 'provider_inactive', 'That provider is switched off and cannot take new assignments'), true
+
+      const result = assignRequest(request, { id: provider.id, name: provider.name }, note ?? undefined, now)
+      if (!result.ok) return problem(res, 409, result.code, 'This request is already complete'), true
+      saveRequest(result.request)
+      logAudit(now, audit, 'assign', 'request', request.reference, `Assigned ${request.reference} to ${provider.name}`)
+      return send(res, 200, adminRequest(result.request, actor, owners, byId)), true
+    }
+
+    // respond
+    const status = body?.status
+    if (!['accepted', 'declined', 'completed'].includes(status)) return invalid(res, { status: 'Choose accepted, declined or completed' }), true
+    // An administrator can only close a request; a provider answers their own assignment.
+    if (actor.role === 'admin' && status !== 'completed') return forbidden(res, 'Only the provider can accept or decline'), true
+    const result = actor.role === 'admin' ? completeRequest(request, now) : respondToAssignment(request, status, now)
+    if (!result.ok) return problem(res, 409, result.code, result.code === 'already_complete' ? 'This request is already complete' : 'That is not a valid next step'), true
+    saveRequest(result.request)
+    const summary = { accepted: `Accepted ${request.reference}`, declined: `Declined ${request.reference}`, completed: `Marked ${request.reference} as complete` }[status]
+    logAudit(now, audit, 'update', 'request', request.reference, summary)
+    return send(res, 200, adminRequest(result.request, actor, owners, byId)), true
+  }
+
+  // ---- orders
+  if (route === 'listOrders') {
+    const status = searchParams.get('status')
+    if (status !== null && !ORDER_STATUSES.includes(status)) return invalid(res, { status: 'Unknown status' }), true
+    const orders = ordersVisibleTo(actor).filter((order) => !status || order.status === status)
+    return send(res, 200, orders.map((order) => adminOrder(order, actor, byId))), true
+  }
+
+  if (route === 'updateOrder') {
+    const body = await readJson(req).catch(() => null)
+    const found = orderRecords.get(params.id)
+    // A provider asking about an order that has none of their products is told it doesn't exist.
+    if (!found || (actor.role === 'provider' && !orderTouchesProvider(found, actor.providerName))) return orderNotFound(res), true
+    const status = body?.status
+    if (!ORDER_STATUSES.includes(status)) return invalid(res, { status: 'Choose an order status' }), true
+
+    const record = currentOrder(found)
+    const actions = orderActionsFor(toPublicOrder(record), actor.role, actor.providerName)
+    if (!actions.includes(status)) {
+      // A real step that this person can't take is forbidden; one that isn't a step at all is a conflict.
+      if (ORDER_TRANSITIONS[record.status].includes(status)) return forbidden(res, 'You cannot make that change to this order'), true
+      return problem(res, 409, 'invalid_transition', `An order that is ${orderStatusLabel[record.status].toLowerCase()} cannot move to ${orderStatusLabel[status].toLowerCase()}`), true
+    }
+    const now = Date.now()
+    const result = applyOrderStatus(record, status, actor.role === 'admin' ? STAFF_ACTOR : actor.providerName, now)
+    if (!result.ok) return problem(res, 409, result.code, 'That is not a valid next step'), true
+    orderRecords.set(result.record.id, result.record)
+    logAudit(now, audit, 'update', 'order', record.reference, `Moved ${record.reference} to ${orderStatusLabel[status]}`)
+    return send(res, 200, adminOrder(result.record, actor, byId)), true
+  }
+
+  // ---- customers (administrators only)
+  if (route === 'listCustomers') {
+    const customers = [...byId.values()].filter(isCustomer).map(adminCustomer)
+    return send(res, 200, customers.sort((a, b) => a.name.localeCompare(b.name))), true
+  }
+
+  if (route === 'getCustomer') {
+    const customer = byId.get(params.id)
+    if (!customer || !isCustomer(customer)) return notFound(res, 'customer'), true
+    return (
+      send(res, 200, {
+        ...adminCustomer(customer),
+        ...(policyFor(customer.id) && { policy: policyFor(customer.id) }),
+        requests: [...requestsFor(customer.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), // the internal note stays
+        orders: allOrders()
+          .filter((order) => order.ownerId === customer.id)
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+          .map(toPublicOrder),
+        memorials: memorials
+          .filter((memorial) => memorial.ownerId === customer.id)
+          .map((memorial) => ({
+            id: memorial.id,
+            name: memorial.name,
+            published: memorial.published,
+            pendingTributes: tributesFor(memorial.id).filter((tribute) => tribute.status === 'pending').length,
+          })),
+      }),
+      true
+    )
+  }
+
+  // ---- providers (administrators only)
+  if (route === 'listProviders') {
+    const requests = everyRequest()
+    const orders = allOrders()
+    const list = [...providers.values()].map((provider) => adminProvider(provider, requests, orders))
+    return send(res, 200, list.sort((a, b) => a.name.localeCompare(b.name))), true
+  }
+
+  if (route === 'createProvider') {
+    const body = await readJson(req).catch(() => null)
+    const source = isObject(body) ? body : {}
+    // Shaped before validating, so a hostile body can never make validateNewProvider throw.
+    const input = {
+      name: text(source.name),
+      providerType: text(source.providerType),
+      contactPerson: text(source.contactPerson),
+      phone: text(source.phone),
+      email: text(source.email),
+      city: text(source.city),
+      province: text(source.province),
+      description: text(source.description),
+    }
+    const errors = validateNewProvider(input)
+    for (const key of ['name', 'providerType', 'contactPerson', 'email', 'city', 'province']) {
+      if (!errors[key] && input[key].length > PROVIDER_TEXT_MAX_LENGTH) errors[key] = `Keep it under ${PROVIDER_TEXT_MAX_LENGTH} characters`
+    }
+    if (input.description.length > PROVIDER_DESCRIPTION_MAX_LENGTH) errors.description = `Keep it under ${PROVIDER_DESCRIPTION_MAX_LENGTH} characters`
+    for (const key of ['name', 'providerType', 'contactPerson', 'phone', 'email', 'city', 'province', 'description']) {
+      if (source[key] !== undefined && source[key] !== null && typeof source[key] !== 'string') errors[key] = 'Enter text'
+    }
+    if (Object.keys(errors).length) return invalid(res, errors), true
+
+    const id = providerIdFor(input.name)
+    if (providers.has(id)) return problem(res, 409, 'provider_exists', 'A provider with that name already exists'), true
+    if (!withinLimit(providerHits, user.id, PROVIDERS_PER_HOUR, HOUR_MS)) return rateLimited(res), true
+
+    const now = Date.now()
+    const provider = {
+      id,
+      name: input.name,
+      providerType: input.providerType,
+      contactPerson: input.contactPerson,
+      phone: normalisePhone(input.phone),
+      ...(input.email && { email: input.email }),
+      city: input.city,
+      province: input.province || input.city,
+      ...(input.description && { description: input.description }),
+      isActive: true,
+      createdAt: new Date(now).toISOString(),
+    }
+    providers.set(id, provider)
+    logAudit(now, audit, 'create', 'provider', provider.name, `Added ${provider.name} as a provider`)
+    return send(res, 201, adminProvider(provider, everyRequest(), allOrders())), true
+  }
+
+  if (route === 'updateProvider') {
+    const provider = providers.get(params.id)
+    if (!provider) return notFound(res, 'provider'), true
+    const body = await readJson(req).catch(() => null)
+    if (typeof body?.isActive !== 'boolean') return invalid(res, { isActive: 'Must be true or false' }), true
+    if (provider.isActive !== body.isActive) {
+      provider.isActive = body.isActive
+      logAudit(Date.now(), audit, 'update', 'provider', provider.name, `${body.isActive ? 'Switched on' : 'Switched off'} ${provider.name}`)
+    }
+    return send(res, 200, adminProvider(provider, everyRequest(), allOrders())), true
+  }
+
+  // activity
+  return send(res, 200, auditLog.slice(0, ACTIVITY_LIMIT)), true
+}
+
 async function handle(req, res) {
   const { pathname, searchParams } = new URL(req.url, 'http://localhost')
 
@@ -798,12 +1216,13 @@ async function handle(req, res) {
 
   if (req.method === 'GET' && pathname === '/marketplace/items') {
     const category = searchParams.get('category')
-    return send(res, 200, category ? marketplaceItems.filter((item) => item.category === category) : marketplaceItems)
+    const catalogue = currentCatalogue()
+    return send(res, 200, category ? catalogue.filter((item) => item.category === category) : catalogue)
   }
 
   if (req.method === 'GET' && pathname.startsWith('/marketplace/items/')) {
     const params = matchPath('/marketplace/items/:id', pathname)
-    const item = params && marketplaceItems.find((candidate) => candidate.id === params.id)
+    const item = params && currentCatalogue().find((candidate) => candidate.id === params.id)
     return item ? send(res, 200, item) : problem(res, 404, 'not_found', 'No such item')
   }
 
@@ -821,7 +1240,10 @@ async function handle(req, res) {
     return send(res, 201, { id: reference.toLowerCase(), reference, estimatedTotal: estimateTotal(plan, body.town, body.serviceType) })
   }
 
-  // Memorial routes first: `/me/memorials/...` must never fall through to the generic `/me` handling.
+  // Staff portal routes before any generic handling.
+  if (pathname.startsWith('/admin/') && (await handleAdmin(req, res, pathname, searchParams))) return
+
+  // Memorial routes next: `/me/memorials/...` must never fall through to the generic `/me` handling.
   if ((pathname.startsWith('/memorials/') || pathname.startsWith('/me/memorials')) && (await handleMemorials(req, res, pathname))) return
 
   // Order routes before the generic /me handling.
@@ -839,7 +1261,11 @@ http
   .listen(PORT, () => {
     console.log(`Mock API listening on http://localhost:${PORT} (latency ${LATENCY_MS}ms)`)
     console.log(`Demo sign-in code for every number: ${DEMO_OTP}`)
-    for (const user of demoUsers) console.log(`  ${user.phone}  ${user.name} (${user.role})`)
+    for (const user of demoUsers) console.log(`  ${user.phone}  ${user.name} (${user.role}${user.providerId ? `, ${user.providerId}` : ''})`)
+    console.log(`Staff portal sign-ins (code ${DEMO_OTP}):`)
+    console.log(`  +263773000333  Nomsa Ndlovu, administrator: sees 1 urgent request (AR-1051) and everything else`)
+    console.log(`  +263773000222  Chipo Dube, Harare Funeral Care (funeral director): 2 requests waiting (AR-1042, AR-1049)`)
+    console.log(`  +263773000444  Farai Chigumba, Msasa Florists (vendor): has an order to confirm (FS-1035)`)
     console.log(`Memorials: public sample at /memorials/grace-nyathi, owned by +263771234567 (it has one tribute awaiting approval)`)
     console.log(`Marketplace: sign in as +263771234567 to see two seeded orders (FS-1017 delivered, FS-1038 in progress)`)
     console.log(`  An order created through the API walks paid -> confirmed -> in progress -> delivered over about 2.5 minutes`)

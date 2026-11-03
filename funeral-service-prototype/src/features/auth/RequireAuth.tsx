@@ -31,10 +31,10 @@ export function RequireAuth({ roles }: RequireAuthProps) {
   if (roles && !roles.includes(user.role)) {
     return (
       <main className="container status-page" id="main-content">
-        <h1>This area is for provider staff</h1>
-        <p className="muted">You’re signed in as {user.name}, which doesn’t have access to this page.</p>
-        <Link className="btn btn--primary" to={paths.account}>
-          Go to my account
+        <h1>This page isn’t available to your account</h1>
+        <p className="muted">You’re signed in as {user.name}, which doesn’t have access to this area.</p>
+        <Link className="btn btn--primary" to={user.role === 'customer' ? paths.account : paths.provider}>
+          {user.role === 'customer' ? 'Go to my account' : 'Back to the portal'}
         </Link>
       </main>
     )

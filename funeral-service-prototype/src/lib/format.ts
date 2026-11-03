@@ -53,3 +53,14 @@ const dateTimeFormat = new Intl.DateTimeFormat('en-GB', {
 
 /** "Wednesday, 10 September, 10:00" in Zimbabwe time, whatever the viewer's timezone. */
 export const formatServiceTime = (iso: string) => dateTimeFormat.format(new Date(iso))
+
+/** "12 minutes ago", "3 hours ago", "2 days ago": for lists where recent time matters (triage queues). */
+export function formatAge(iso: string, now: Date = new Date()): string {
+  const minutes = Math.max(0, Math.round((now.getTime() - new Date(iso).getTime()) / 60_000))
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  const days = Math.round(hours / 24)
+  return `${days} ${days === 1 ? 'day' : 'days'} ago`
+}

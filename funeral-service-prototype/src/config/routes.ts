@@ -1,6 +1,11 @@
 export const paths = {
   home: '/',
   provider: '/provider-portal',
+  portalRequests: '/provider-portal/requests',
+  portalOrders: '/provider-portal/orders',
+  portalCustomers: '/provider-portal/customers',
+  portalProviders: '/provider-portal/providers',
+  portalActivity: '/provider-portal/activity',
   login: '/login',
   signup: '/signup',
   account: '/account',
@@ -35,7 +40,12 @@ export const accountMemorialPath = (id: string, tab?: string) =>
 /** Document title per route; unknown paths fall back to the not-found title. */
 export const pageTitles: Record<string, string> = {
   [paths.home]: 'Zimbabwe Funeral Service | Funeral Services, Memorials & Family Support',
-  [paths.provider]: 'Provider portal | Zimbabwe Funeral Service',
+  [paths.provider]: 'Staff portal | Zimbabwe Funeral Service',
+  [paths.portalRequests]: 'Requests | Staff portal | Zimbabwe Funeral Service',
+  [paths.portalOrders]: 'Orders | Staff portal | Zimbabwe Funeral Service',
+  [paths.portalCustomers]: 'Customers | Staff portal | Zimbabwe Funeral Service',
+  [paths.portalProviders]: 'Providers | Staff portal | Zimbabwe Funeral Service',
+  [paths.portalActivity]: 'Activity | Staff portal | Zimbabwe Funeral Service',
   [paths.login]: 'Sign in | Zimbabwe Funeral Service',
   [paths.signup]: 'Create your account | Zimbabwe Funeral Service',
   [paths.account]: 'My account | Zimbabwe Funeral Service',

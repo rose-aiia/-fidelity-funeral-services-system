@@ -3,6 +3,8 @@ import { ApiError } from '@/lib/api-error'
 import { env } from '@/lib/env'
 import { get, post } from '@/lib/http'
 import { mockResponse } from '@/lib/mock'
+import { readInactiveProviders } from '@/lib/mock-flags'
+import { activeCatalogue } from './catalogue'
 import { marketplaceItems, type MarketplaceItem, type NewOrder, type Order, type PaymentInput } from './data'
 
 const MOCK_READ_LATENCY_MS = 350
@@ -18,8 +20,11 @@ function mockUserId(): string {
 
 const orderPath = (id: string) => `/me/orders/${encodeURIComponent(id)}`
 
+/** Mock mode: the catalogue minus products of providers the administrator switched off. */
+export const visibleCatalogue = (): MarketplaceItem[] => activeCatalogue(marketplaceItems, readInactiveProviders())
+
 export function listMarketplaceItems(signal?: AbortSignal): Promise<MarketplaceItem[]> {
-  return env.useMock ? mockResponse(marketplaceItems) : get<MarketplaceItem[]>('/marketplace/items', { signal })
+  return env.useMock ? mockResponse(visibleCatalogue()) : get<MarketplaceItem[]>('/marketplace/items', { signal })
 }
 
 export async function listOrders(signal?: AbortSignal): Promise<Order[]> {

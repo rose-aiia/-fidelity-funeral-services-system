@@ -83,4 +83,13 @@
   }
 
   .choice:has(input:focus-visible) { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
+
+  .page-head__lead { max-width: 56ch; }
+
+  .studio-form__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .studio-form__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+  @media (max-width: 640px) {
+    .studio-form__pair { grid-template-columns: minmax(0, 1fr); }
+  }
 }

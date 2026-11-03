@@ -89,6 +89,9 @@ export function signUp({ name, phone: rawPhone, code, email }: SignUpInput): Use
   return user
 }
 
+/** Everyone who can sign in, for the staff portal. */
+export const listUsers = (): User[] => allUsers()
+
 export function findUser(id: string): User | undefined {
   return allUsers().find((candidate) => candidate.id === id)
 }

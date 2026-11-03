@@ -39,6 +39,21 @@ export type RequestStatus = 'received' | 'assigned' | 'in_progress' | 'complete'
 
 export type ContactPreference = 'call' | 'whatsapp' | 'sms'
 
+/** What a funeral service provider has done with a request an administrator handed to them. */
+export type AssignmentStatus = 'assigned' | 'accepted' | 'declined' | 'completed'
+
+export type RequestAssignment = {
+  providerId: string
+  providerName: string
+  status: AssignmentStatus
+  /** ISO timestamp. */
+  assignedAt: string
+  /** ISO timestamp of the provider's answer, once they have given one. */
+  respondedAt?: string
+  /** A note from the administrator to the provider. */
+  note?: string
+}
+
 export type AssistanceRequest = {
   id: string
   /** Human-readable reference a family can quote when they phone. */
@@ -49,8 +64,9 @@ export type AssistanceRequest = {
   status: RequestStatus
   /** ISO timestamp. */
   createdAt: string
-  /** Name of the adviser handling it, once assigned. */
+  /** Name of whoever is handling it, once assigned (the provider's name, for display). */
   assignedTo?: string
+  assignment?: RequestAssignment
 }
 
 export type NewRequest = {

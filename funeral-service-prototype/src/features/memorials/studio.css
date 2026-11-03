@@ -65,7 +65,6 @@
 
   /* ================= Editor ================= */
 
-  .page-head__lead { max-width: 56ch; }
 
   .editor-head { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
   .editor-head__main { flex: 1; min-width: 12rem; display: grid; gap: 2px; align-content: center; }
@@ -114,8 +113,6 @@
   /* ---- Forms ---- */
 
   .studio-form { gap: var(--space-4); }
-  .studio-form__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-  .studio-form__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
   .studio-form__divider { height: 1px; background: var(--color-border); }
   .studio-form__nested { padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-bg-soft); border: 1px solid var(--color-border); }
   .textarea--tall { min-height: 280px; line-height: 1.7; }
@@ -186,7 +183,6 @@
   .danger-zone { border-color: var(--color-accent-border); }
 
   @media (max-width: 640px) {
-    .studio-form__pair { grid-template-columns: minmax(0, 1fr); }
     .timeline-editor__row { grid-template-columns: 84px minmax(0, 1fr); grid-template-areas: 'year title' 'text text' 'remove remove'; }
     .editor-progress { align-items: flex-start; }
   }
