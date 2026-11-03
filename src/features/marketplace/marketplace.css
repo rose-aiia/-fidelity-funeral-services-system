@@ -8,56 +8,5 @@
     margin: 0 auto var(--space-5);
   }
 
-  .marketplace-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--space-4);
-  }
-
-  .marketplace-card {
-    --card-pad: 18px;
-    --stack-gap: var(--space-4);
-    overflow: hidden;
-    animation: marketplace-rise 420ms var(--ease) both;
-  }
-
-  .marketplace-card:hover { transform: translateY(-5px); }
-
-  .marketplace-card__top,
-  .marketplace-card__footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
-
-  .marketplace-card__badge {
-    padding: 7px 10px;
-    border-radius: var(--radius-pill);
-    background: var(--color-accent-tint);
-    color: var(--color-accent-deep);
-    font-weight: 800;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .marketplace-card__price { font-weight: 800; color: var(--color-heading); }
-
-  .marketplace-card__body { display: flex; flex-direction: column; gap: 10px; }
-  .marketplace-card__body h3 { font-size: 1.18rem; }
-  .marketplace-card__body p { line-height: 1.7; }
-
-  .marketplace-card__footer {
-    margin-top: auto;
-    padding-top: 10px;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .marketplace-card__footer span { color: var(--color-text-muted); font-size: 0.85rem; font-weight: 600; }
-
-  @keyframes marketplace-rise {
-    from { opacity: 0; transform: translateY(18px) scale(0.98); }
-    to { opacity: 1; transform: none; }
-  }
+  .marketplace-more { display: flex; justify-content: center; margin-top: var(--space-6); }
 }

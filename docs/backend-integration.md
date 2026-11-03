@@ -139,6 +139,60 @@ contract is in `openapi.yaml`; the mock implements all of it, with state in memo
     opts in to search visibility.
   - Memorials of private individuals are sensitive: audit who creates, edits and removes them.
 
+## Marketplace and orders
+
+A catalogue of products and services, a cart in the browser, and checkout with EcoCash or Paynow. The
+contract is in `openapi.yaml`; the mock implements all of it. The order lifecycle itself (`order-flow.ts`)
+is shared by the browser mock and `mock-api.mjs`, so both behave the same. Try it as `+263771234567`, who
+has two seeded orders (`FS-1017` delivered, `FS-1038` in progress).
+
+| Endpoint | Purpose | Notable errors |
+| --- | --- | --- |
+| `GET /marketplace/items`, `GET .../{id}` | Public catalogue and one item | 404 `not_found` |
+| `GET /me/orders`, `GET /me/orders/{id}` | The user's orders (newest first), brought up to date on read | 401, 404 |
+| `POST /me/orders` | Place an order and start payment (201, `awaiting_payment`) | 422 (keys `delivery.*`, `payment.*`, `lines`, `lines.<n>`), 429 `rate_limited` |
+| `POST /me/orders/{id}/payment` | New payment attempt after a failure, or another method | 404, 409 `order_not_payable`, 422 |
+
+- **The server owns the price.** A new order carries item ids, chosen option ids, quantities and
+  personalisation text, never prices. The server looks every item up and computes unit prices, line totals,
+  the delivery fee and the total (`features/marketplace/pricing.ts`, which the browser uses only for a
+  preview). Unknown items, options the item doesn't offer, a quantity outside 1 to 10, missing or surplus
+  personalisation and more than 20 lines are rejected. Prices are copied onto the order, so a later catalogue
+  change doesn't alter it.
+- **Delivery fee.** A flat $25 once per order when any line is `delivery`; orders of `service` items only
+  (repatriation, marquee hire, video tribute) pay none.
+- **Order status:** `awaiting_payment` -> `paid` -> `confirmed` -> `in_progress` -> `delivered`. A failed
+  payment gives `payment_failed`; a new attempt returns it to `awaiting_payment`. `cancelled` exists in the
+  type but nothing produces it yet.
+- **Payment status:** `pending` -> `paid` or `failed`. `Order.payment` is the latest attempt; its reference
+  is `<order reference>-P<attempt>`. Only `awaiting_payment` and `payment_failed` orders can be paid
+  (otherwise 409), so a paid order can't be charged twice.
+- **Mock timings.** An EcoCash prompt is answered 4 seconds after it starts. A paid order becomes `confirmed`
+  20 seconds after payment, `in_progress` after 60 and `delivered` after 150 (about 2.5 minutes in all). Orders
+  are advanced whenever they are read; nothing runs in the background. EcoCash `0780000000` is always
+  declined (demo behaviour of the mock server only); any other 077 or 078 number pays. Seeded orders don't move.
+- **Paynow in the mock** settles by itself after 4 seconds, like EcoCash, because the mock has no hosted
+  Paynow page. This is mock-only. In production `POST /me/orders` (or the payment endpoint) would return a
+  redirect URL for Paynow's hosted page, the result would arrive by webhook, and `GET /me/orders/{id}` stays the
+  source of truth. The response has no redirect field yet; add one when the integration is built.
+- **Rate limit.** 10 orders per user per hour, `429` `rate_limited`, counted only for valid orders. The mock
+  keeps it in memory; a real backend should also limit payment attempts per order.
+- **Ownership.** Another user's order is `404`, never `403`.
+- **A real payment integration needs:**
+  - EcoCash and Paynow merchant credentials and integration keys, kept server-side.
+  - Webhook endpoints that verify the provider's signature (Paynow's hash), reject replays and update the
+    order idempotently. Never trust the browser's claim that a payment succeeded.
+  - An idempotency key on `POST /me/orders` (for example an `Idempotency-Key` header), so a double tap or a
+    retry after a timeout doesn't create two orders or two charges.
+  - Reconciliation against provider statements, and a path for payments that arrive after the order was
+    abandoned or paid another way.
+  - Refunds and cancellations (the `cancelled` status), with an audit trail.
+  - Payment timeouts: an unanswered EcoCash prompt should expire to `failed` rather than stay `pending`.
+- **Provider fulfilment.** Each line names its `provider`. Today the mock moves orders through
+  `confirmed`, `in_progress` and `delivered` on a timer. In a later phase providers will update these
+  statuses themselves (staff or provider endpoints, role-checked on the server), and the timer goes away.
+- **Images.** `MarketplaceItem.image` is a URL in production. The mock server returns inline `data:` URIs.
+
 ## What the backend must do
 
 - **Own the price.** `POST /quote-requests` receives choices only and returns the authoritative
@@ -164,4 +218,4 @@ contract is in `openapi.yaml`; the mock implements all of it, with state in memo
 - **Marketplace "Enquire" button** does nothing yet and needs an endpoint.
 - **Response validation.** Responses are cast to their TypeScript types. A schema library (e.g. Zod) at the
   `api.ts` boundary would catch contract drift at runtime; it wasn't added to keep dependencies minimal.
-- **Marketplace `accent`** is a decorative glyph. Real products will want an image URL.
+- **Marketplace `accent`** is a decorative glyph, a fallback for items without an `image`.

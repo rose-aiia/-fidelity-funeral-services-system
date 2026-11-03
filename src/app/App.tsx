@@ -7,6 +7,7 @@ import { HomeLayout } from '@/components/layout/HomeLayout'
 import { ProviderLayout } from '@/components/layout/ProviderLayout'
 import { paths } from '@/config/routes'
 import { AuthProvider, RequireAuth } from '@/features/auth'
+import { CartDrawer } from '@/features/marketplace'
 import { HomePage } from '@/features/home/HomePage'
 import { queryClient } from '@/lib/query-client'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -23,6 +24,11 @@ const ProfilePage = lazy(() => import('@/features/account/ProfilePage'))
 const MemorialPage = lazy(() => import('@/features/memorials/MemorialPage'))
 const MemorialsPage = lazy(() => import('@/features/memorials/MemorialsPage'))
 const MemorialEditorPage = lazy(() => import('@/features/memorials/MemorialEditorPage'))
+const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
+const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
+const CheckoutPage = lazy(() => import('@/features/marketplace/CheckoutPage'))
+const OrdersPage = lazy(() => import('@/features/marketplace/OrdersPage'))
+const OrderPage = lazy(() => import('@/features/marketplace/OrderPage'))
 
 export function App() {
   return (
@@ -31,10 +37,13 @@ export function App() {
         <AuthProvider>
           <BrowserRouter>
             <RouteEffects />
+            <CartDrawer />
             <Routes>
               <Route element={<HomeLayout />}>
                 <Route index element={<HomePage />} />
                 <Route path={`${paths.memorials}/:slug`} element={<MemorialPage />} />
+                <Route path={paths.marketplace} element={<MarketplacePage />} />
+                <Route path={`${paths.marketplace}/:id`} element={<ProductPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
 
@@ -44,12 +53,17 @@ export function App() {
               </Route>
 
               <Route element={<RequireAuth />}>
+                <Route element={<HomeLayout />}>
+                  <Route path={paths.checkout} element={<CheckoutPage />} />
+                </Route>
                 <Route element={<AccountLayout />}>
                   <Route path={paths.account} element={<DashboardPage />} />
                   <Route path={paths.accountPolicy} element={<PolicyPage />} />
                   <Route path={paths.accountRequests} element={<RequestsPage />} />
                   <Route path={paths.accountMemorials} element={<MemorialsPage />} />
                   <Route path={`${paths.accountMemorials}/:id`} element={<MemorialEditorPage />} />
+                  <Route path={paths.accountOrders} element={<OrdersPage />} />
+                  <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />
                 </Route>
               </Route>

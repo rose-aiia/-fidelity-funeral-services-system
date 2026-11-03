@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { anchor, paths } from '@/config/routes'
 import { primaryNav } from '@/config/site'
 import { useAuth } from '@/features/auth'
+import { CartButton } from '@/features/marketplace'
 import { Brand } from './Brand'
 
 export function HomeHeader() {
@@ -51,6 +52,10 @@ export function HomeHeader() {
             Request a quote
           </Link>
         </nav>
+
+        <div className="site-header__cart">
+          <CartButton />
+        </div>
 
         <button
           type="button"

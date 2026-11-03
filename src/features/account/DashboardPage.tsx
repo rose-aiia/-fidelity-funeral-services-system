@@ -4,9 +4,10 @@ import { QueryState } from '@/components/ui/QueryState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { paths } from '@/config/routes'
 import { useAuth } from '@/features/auth'
+import { OrdersSummaryCard } from '@/features/marketplace'
 import { MemorialsSummaryCard } from '@/features/memorials'
 import { greeting, statusDisplay } from './cover'
-import { ComingSoon, NextActions, NoPolicyCard } from './DashboardPanels'
+import { NextActions, NoPolicyCard } from './DashboardPanels'
 import { LinkedCelebration } from './LinkedCelebration'
 import { PolicyCard } from './PolicyCard'
 import { usePolicy, useRequests } from './queries'
@@ -118,7 +119,7 @@ export default function DashboardPage() {
             <MemorialsSummaryCard />
           </div>
           <div className="reveal" style={{ '--i': 5 } as React.CSSProperties}>
-            <ComingSoon />
+            <OrdersSummaryCard />
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '@/components/ui/Icon'
-import { accountComingSoon } from '@/config/site'
 import { anchor, paths } from '@/config/routes'
 import { LinkPolicyForm } from './LinkPolicyForm'
 
@@ -43,28 +42,6 @@ export function NextActions({ hasPolicy }: { hasPolicy: boolean }) {
           </li>
         ))}
       </ul>
-    </section>
-  )
-}
-
-/** Visible-but-not-built areas, so the direction of the product is clear from the dashboard. */
-export function ComingSoon() {
-  return (
-    <section className="soon" aria-label="Coming soon">
-      {accountComingSoon.map((item) => (
-        <Link key={item.label} className="soon__tile" to={item.preview}>
-          <span className="soon__icon">
-            <Icon name={item.icon} size={22} />
-          </span>
-          <span>
-            <strong>{item.label}</strong>
-            <span>Flowers, plaques and services.</span>
-          </span>
-          <span className="soon__tag">
-            <Icon name="lock" size={12} /> Soon
-          </span>
-        </Link>
-      ))}
     </section>
   )
 }

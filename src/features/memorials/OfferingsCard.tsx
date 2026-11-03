@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Callout } from '@/components/ui/Callout'
 import { Icon, type IconName } from '@/components/ui/Icon'
+import { productPath } from '@/config/routes'
 import { getErrorMessage } from '@/lib/api-error'
 import type { Memorial, OfferingKind } from './data'
 import { useOffering } from './queries'
@@ -93,6 +95,12 @@ export function OfferingsCard({ memorial }: { memorial: Memorial }) {
           ))}
         </div>
       )}
+
+      <p className="offerings__real">
+        Want to do more?{' '}
+        <Link to={productPath('wreath-package', memorial.name)}>Send flowers to the family</Link> or{' '}
+        <Link to={productPath('granite-plaque', memorial.name)}>order a remembrance plaque</Link>.
+      </p>
 
       <p className="visually-hidden" role="status" aria-live="polite">
         {announcement}

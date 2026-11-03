@@ -166,6 +166,9 @@
   .garden__item--flower { color: var(--color-accent); }
   .garden__item--candle { color: var(--color-highlight); animation-name: flicker; animation-duration: 2.4s; }
 
+  .offerings__real { text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); }
+  .offerings__real a { color: var(--color-accent-strong); font-weight: 600; }
+
   /* ---- Sections ---- */
 
   .memorial-section { padding-top: clamp(40px, 6vw, 72px); }

@@ -22,6 +22,12 @@ info:
     `not_found`, exactly like one that does not exist. `/me/memorials` endpoints need the session cookie and
     answer `404` (never `403`) for a memorial that belongs to someone else. Visitor tributes start `pending`
     and appear publicly only once the owner approves them. Rate limits answer `429` with code `rate_limited`.
+
+    **Marketplace and orders.** `GET /marketplace/items[/{id}]` is public. `/me/orders` endpoints need the
+    session cookie and answer `404` (never `403`) for an order that belongs to someone else. The client sends
+    choices only (item, options, quantity, personalisation); the server prices every order and returns the
+    authoritative totals. An order starts `awaiting_payment`, and once its payment is `paid` it moves on to
+    `confirmed`, `in_progress` and `delivered`. Orders are brought up to date whenever they are read.
 servers:
   - url: /api
 
@@ -59,6 +65,24 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/MarketplaceItem' }
+
+  /marketplace/items/{id}:
+    get:
+      summary: One marketplace product or service
+      operationId: getMarketplaceItem
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: The item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '404':
+          description: Code `not_found`. No such item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
   /faqs:
     get:
@@ -714,6 +738,119 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  /me/orders:
+    get:
+      summary: The user's marketplace orders
+      operationId: listMyOrders
+      description: |
+        Newest first. Each order is brought up to date before it is returned (a pending payment that has been
+        answered, a paid order that has moved to its next stage).
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Orders owned by the user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      summary: Place an order and start its payment
+      operationId: createOrder
+      description: |
+        The client sends choices only; the server looks every item up and computes the prices, the delivery fee
+        and the total, and ignores anything the client might say about money. The order is created
+        `awaiting_payment` with a `pending` payment.
+
+        Validation runs delivery, then payment, then lines, and reports everything it finds in one `422`:
+        `details` keys are `delivery.<field>` (`recipientName`, `phone`, `town`, `address`, `neededBy`, `note`),
+        `payment.<field>` (`method`, `ecocashNumber`), and `lines` (the list as a whole) or `lines.<n>` (the
+        n-th line, counting from 0; only the first bad line is reported). `inMemoryOf` is reported as itself.
+
+        Limited to 10 orders per user per hour.
+
+        **Payment.** For `ecocash` the buyer approves a prompt on their phone and the payment settles by itself;
+        poll `GET /me/orders/{id}` until `payment.status` leaves `pending`. A production `paynow` payment would
+        return a redirect URL to Paynow's hosted page and settle through a webhook; this contract carries no
+        such URL yet. **Mock only:** the reference server has no hosted page, so `paynow` settles by itself,
+        exactly like EcoCash, and the EcoCash number `+263780000000` is always declined.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewOrder' }
+      responses:
+        '201':
+          description: The order, `awaiting_payment`, with payment `pending`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422':
+          description: Code `validation_failed`. `details` is keyed as described above.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /me/orders/{id}:
+    get:
+      summary: One of the user's orders
+      operationId: getMyOrder
+      description: Brought up to date before it is returned. This is the source of truth for the order and its payment.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: The order.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/OrderNotFound' }
+
+  /me/orders/{id}/payment:
+    post:
+      summary: Start a new payment attempt
+      operationId: payOrder
+      description: |
+        For retrying after a failed payment, or paying another way. Replaces the order's `payment` with a new
+        `pending` one (its `reference` ends in the next `-P<n>`) and sets the status to `awaiting_payment`.
+        Only orders that are `awaiting_payment` or `payment_failed` can be paid.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentInput' }
+      responses:
+        '200':
+          description: The order with its new pending payment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/OrderNotFound' }
+        '409':
+          description: Code `order_not_payable`. The order is not `awaiting_payment` or `payment_failed` (it is already paid, or cancelled).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Validation failed. `details` maps `method` or `ecocashNumber` to messages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
 components:
   securitySchemes:
     cookieAuth:
@@ -740,6 +877,18 @@ components:
       in: path
       required: true
       schema: { type: string, examples: [p-1] }
+    ItemId:
+      name: id
+      in: path
+      required: true
+      description: '`MarketplaceItem.id`.'
+      schema: { type: string, examples: [wreath-package] }
+    OrderId:
+      name: id
+      in: path
+      required: true
+      description: '`Order.id`.'
+      schema: { type: string, examples: [o-1039] }
 
   responses:
     Unauthenticated:
@@ -754,8 +903,13 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Problem' }
+    OrderNotFound:
+      description: Code `not_found`. No such order, or it belongs to someone else. Never `403`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
     RateLimited:
-      description: Code `rate_limited`. Too many requests from this visitor; try again later.
+      description: Code `rate_limited`. Too many requests from this visitor or user; try again later.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -792,7 +946,220 @@ components:
           description: Price in whole US dollars.
         accent:
           type: string
-          description: A decorative glyph shown on the card. Expected to be replaced by an image URL.
+          description: A decorative glyph, shown when there is no `image`.
+        image:
+          type: string
+          description: An image URL (hosted on a CDN in production). The mock server returns a `data:` URI.
+        provider:
+          type: string
+          description: Who supplies and fulfils the item.
+          examples: [Msasa Florists]
+        leadTime:
+          type: string
+          description: How long it takes, for display.
+          examples: [Same day in town]
+        fulfilment: { $ref: '#/components/schemas/Fulfilment' }
+        details:
+          type: string
+          description: Longer description for the item page.
+        includes:
+          type: array
+          items: { type: string }
+        options:
+          type: array
+          items: { $ref: '#/components/schemas/OptionGroup' }
+        personalisation: { $ref: '#/components/schemas/Personalisation' }
+
+    Fulfilment:
+      type: string
+      enum: [delivery, service]
+      description: |
+        `delivery` items are physical and incur the delivery fee; `service` items are arranged by the provider.
+        An item without `fulfilment` is treated as `delivery`.
+
+    OptionChoice:
+      type: object
+      required: [id, label, priceDelta]
+      properties:
+        id: { type: string, examples: [large] }
+        label: { type: string, examples: [Large] }
+        priceDelta:
+          type: integer
+          description: Added to the item's base price, whole US dollars. May be negative.
+
+    OptionGroup:
+      type: object
+      description: One decision the buyer makes (a material, a size). The first choice is the default.
+      required: [id, label, choices]
+      properties:
+        id: { type: string, examples: [size] }
+        label: { type: string }
+        choices:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/OptionChoice' }
+
+    Personalisation:
+      type: object
+      description: Free text printed or engraved on the item, or written on a card.
+      required: [label, placeholder, maxLength]
+      properties:
+        label: { type: string, examples: [Message on the card] }
+        placeholder: { type: string }
+        maxLength: { type: integer }
+        required: { type: boolean, description: When true the line must carry non-empty `personalisation`. }
+
+    OrderLineInput:
+      type: object
+      description: One requested line. Choices only, never prices.
+      required: [itemId, options, quantity]
+      properties:
+        itemId: { type: string, description: A `MarketplaceItem.id`. }
+        options:
+          type: object
+          additionalProperties: { type: string }
+          description: |
+            The chosen `OptionChoice.id` per `OptionGroup.id`. A group left out takes its first (default) choice;
+            a group or choice the item doesn't offer is rejected.
+          examples: [{ size: large }]
+        quantity: { type: integer, minimum: 1, maximum: 10 }
+        personalisation:
+          type: string
+          description: Required when the item's `personalisation.required` is true, rejected when the item has none, and limited to its `maxLength`.
+
+    DeliveryDetails:
+      type: object
+      required: [recipientName, phone, town, address]
+      properties:
+        recipientName: { type: string, minLength: 2, maxLength: 80 }
+        phone:
+          type: string
+          description: A Zimbabwean mobile number in any common form. The server stores and returns it as E.164.
+        town:
+          type: string
+          enum: [Harare, Bulawayo, Mutare, Gweru, Chitungwiza]
+        address: { type: string, minLength: 5, maxLength: 200 }
+        neededBy:
+          type: string
+          format: date
+          description: When the order is needed by. Not in the past.
+        note: { type: string, maxLength: 300 }
+
+    PaymentMethod:
+      type: string
+      enum: [ecocash, paynow]
+
+    PaymentStatus:
+      type: string
+      enum: [pending, paid, failed]
+
+    PaymentInput:
+      type: object
+      required: [method]
+      properties:
+        method: { $ref: '#/components/schemas/PaymentMethod' }
+        ecocashNumber:
+          type: string
+          description: The EcoCash wallet to charge, an Econet number (077 or 078). Required for `ecocash`.
+          examples: ['0771234567']
+
+    NewOrder:
+      type: object
+      required: [lines, delivery, payment]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { $ref: '#/components/schemas/OrderLineInput' }
+        delivery: { $ref: '#/components/schemas/DeliveryDetails' }
+        payment: { $ref: '#/components/schemas/PaymentInput' }
+        inMemoryOf:
+          type: string
+          maxLength: 80
+          description: Name of the person the order honours, if it was started from a memorial. Longer values are cut to 80 characters.
+
+    OrderStatus:
+      type: string
+      enum: [awaiting_payment, payment_failed, paid, confirmed, in_progress, delivered, cancelled]
+      description: |
+        `awaiting_payment` -> `paid` -> `confirmed` -> `in_progress` -> `delivered`. A failed payment moves the
+        order to `payment_failed`, from where a new payment attempt returns it to `awaiting_payment`.
+        `cancelled` is reserved: nothing in this version of the API produces it.
+
+    OrderLine:
+      type: object
+      description: A priced line, copied from the catalogue at the time of the order.
+      required: [itemId, title, optionLabels, quantity, unitPrice, lineTotal]
+      properties:
+        itemId: { type: string }
+        title: { type: string }
+        provider: { type: string }
+        image: { type: string, description: An image URL. }
+        optionLabels:
+          type: array
+          items: { type: string }
+          description: Human-readable choices in option-group order, e.g. `Black granite`.
+        quantity: { type: integer }
+        unitPrice:
+          type: integer
+          description: Base price plus the chosen options' deltas, whole US dollars.
+        lineTotal: { type: integer, description: '`unitPrice` times `quantity`.' }
+        personalisation: { type: string }
+
+    OrderPayment:
+      type: object
+      required: [method, status, reference, amount]
+      properties:
+        method: { $ref: '#/components/schemas/PaymentMethod' }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        reference:
+          type: string
+          description: Quote this when phoning about the payment. `<order reference>-P<attempt>`.
+          examples: [FS-1039-P1]
+        amount: { type: integer, description: 'The order total, whole US dollars.' }
+        ecocashNumber:
+          type: string
+          description: Masked, e.g. `+263 77 ••• 4567`. Only for `ecocash`.
+        paidAt: { type: string, format: date-time }
+        failureReason: { type: string, description: Set when `status` is `failed`. }
+
+    OrderEvent:
+      type: object
+      required: [at, label]
+      properties:
+        at: { type: string, format: date-time }
+        label: { type: string, examples: [Order placed] }
+
+    Order:
+      type: object
+      required: [id, reference, status, lines, subtotal, deliveryFee, total, delivery, payment, events, createdAt]
+      properties:
+        id: { type: string, examples: [o-1039] }
+        reference:
+          type: string
+          description: Human-readable reference a family can quote by phone.
+          examples: [FS-1039]
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/OrderLine' }
+        subtotal: { type: integer, description: 'Sum of the line totals, whole US dollars.' }
+        deliveryFee:
+          type: integer
+          description: A flat 25 dollars when any line is `delivery`, otherwise 0.
+        total: { type: integer, description: '`subtotal` plus `deliveryFee`.' }
+        delivery: { $ref: '#/components/schemas/DeliveryDetails' }
+        payment:
+          description: The latest payment attempt.
+          allOf:
+            - $ref: '#/components/schemas/OrderPayment'
+        events:
+          type: array
+          description: Oldest first.
+          items: { $ref: '#/components/schemas/OrderEvent' }
+        inMemoryOf: { type: string }
+        createdAt: { type: string, format: date-time }
 
     Faq:
       type: object

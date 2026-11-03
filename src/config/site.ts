@@ -15,6 +15,7 @@ export const site = {
 export const primaryNav: NavLink[] = [
   { label: 'Services', to: anchor('services') },
   { label: 'Plans', to: anchor('plans') },
+  { label: 'Marketplace', to: paths.marketplace },
   { label: 'Memorials', to: anchor('memorials') },
   { label: 'Support', to: anchor('support') },
 ]
@@ -26,12 +27,8 @@ export const accountNav: AccountNavItem[] = [
   { label: 'My policy', to: paths.accountPolicy, icon: 'shield' },
   { label: 'Requests', to: paths.accountRequests, icon: 'chat' },
   { label: 'Memorials', to: paths.accountMemorials, icon: 'flower' },
+  { label: 'Orders', to: paths.accountOrders, icon: 'bag' },
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
-]
-
-/** Parts of the account that are designed but not built yet; shown so the product direction is visible. */
-export const accountComingSoon: { label: string; icon: IconName; preview: string }[] = [
-  { label: 'Marketplace', icon: 'bag', preview: anchor('marketplace') },
 ]
 
 export const footerColumns: { title: string; links: NavLink[] }[] = [
@@ -41,6 +38,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Services', to: anchor('services') },
       { label: 'Plans', to: anchor('plans') },
       { label: 'Remembrance', to: anchor('memorials') },
+      { label: 'Marketplace', to: paths.marketplace },
     ],
   },
   {

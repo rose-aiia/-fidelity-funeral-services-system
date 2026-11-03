@@ -4,8 +4,9 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Icon } from '@/components/ui/Icon'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { paths } from '@/config/routes'
-import { accountComingSoon, accountNav } from '@/config/site'
+import { accountNav } from '@/config/site'
 import { useAuth, useSignOutAndLeave } from '@/features/auth'
+import { CartButton } from '@/features/marketplace'
 import { Brand } from './Brand'
 import './account-layout.css'
 
@@ -36,6 +37,7 @@ export function AccountLayout() {
           <Brand to={paths.account} subtitle="My account" />
 
           <div className="site-header__actions">
+            <CartButton />
             <Link className="btn btn--outline btn--sm account-header__site" to={paths.home}>
               Back to website
             </Link>
@@ -63,19 +65,6 @@ export function AccountLayout() {
                     <Icon name={item.icon} size={20} />
                     {item.label}
                   </NavLink>
-                </li>
-              ))}
-            </ul>
-
-            <p className="account-nav__heading">Coming soon</p>
-            <ul className="account-nav">
-              {accountComingSoon.map((item) => (
-                <li key={item.label}>
-                  <Link to={item.preview} className="account-nav__link account-nav__link--soon">
-                    <Icon name={item.icon} size={20} />
-                    {item.label}
-                    <span className="account-nav__soon">Preview</span>
-                  </Link>
                 </li>
               ))}
             </ul>

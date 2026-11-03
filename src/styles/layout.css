@@ -26,6 +26,8 @@
     height: var(--header-h);
   }
 
+  .site-header__cart { display: flex; align-items: center; }
+
   .site-header__actions {
     margin-left: auto;
     display: flex;

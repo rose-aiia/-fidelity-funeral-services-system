@@ -1,11 +1,15 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Icon } from '@/components/ui/Icon'
 import { QueryState } from '@/components/ui/QueryState'
 import { Section } from '@/components/ui/Section'
 import { SectionHead } from '@/components/ui/SectionHead'
-import { formatUsd } from '@/lib/format'
+import { paths } from '@/config/routes'
 import { ALL_CATEGORIES, type MarketplaceItem } from './data'
+import { ProductCard } from './ProductCard'
 import { useMarketplaceItems } from './queries'
 import './marketplace.css'
+import './shop.css'
 
 export function MarketplaceSection() {
   const { data: items, isPending, error, refetch } = useMarketplaceItems()
@@ -33,41 +37,25 @@ function MarketplaceCatalogue({ items }: { items: MarketplaceItem[] }) {
     <>
       <div className="marketplace-filters" aria-label="Marketplace category filters">
         {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className="chip"
-            onClick={() => setFilter(category)}
-            aria-pressed={filter === category}
-          >
+          <button key={category} type="button" className="chip" onClick={() => setFilter(category)} aria-pressed={filter === category}>
             {category}
           </button>
         ))}
       </div>
 
-      <div className="marketplace-grid">
+      <ul className="shop-grid">
         {visibleItems.map((item) => (
-          <article key={item.id} className="card card--interactive stack marketplace-card">
-            <div className="marketplace-card__top">
-              <span className="marketplace-card__badge">{item.category}</span>
-              <span className="marketplace-card__price">{formatUsd(item.price)}</span>
-            </div>
-            <div className="icon-tile icon-tile--lg" aria-hidden="true">
-              {item.accent}
-            </div>
-            <div className="marketplace-card__body">
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </div>
-            <div className="marketplace-card__footer">
-              <span>Request quote</span>
-              <button type="button" className="btn btn--outline btn--sm">
-                Enquire
-              </button>
-            </div>
-          </article>
+          <li key={item.id}>
+            <ProductCard item={item} />
+          </li>
         ))}
-      </div>
+      </ul>
+
+      <p className="marketplace-more">
+        <Link className="btn btn--dark" to={paths.marketplace}>
+          Browse the whole marketplace <Icon name="arrow-right" size={18} />
+        </Link>
+      </p>
     </>
   )
 }

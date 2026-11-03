@@ -1,9 +1,13 @@
 // Reference implementation of the API contract in docs/openapi.yaml, backed by the app's own sample data.
 // Run it with `npm run mock-api`, then start the app against it with VITE_API_MODE=live.
-// Needs Node 22.18+ (it imports the app's .ts data, pricing, account and memorial modules directly).
+// Needs Node 22.18+ (it imports the app's .ts data, pricing, order-flow, account and memorial modules directly).
 //
 // Accounts: sign in with a demo phone number (listed at startup) and the code 123456. Sessions, users, policy
-// links, requests and memorials live in memory and reset when the server restarts.
+// links, requests, memorials and marketplace orders live in memory and reset when the server restarts.
+//
+// Orders: payments are simulated. EcoCash and Paynow both settle by themselves about 4 seconds after they start
+// (a real Paynow payment would hand the buyer a hosted page); EcoCash 0780000000 is always declined. A paid order
+// then moves on a timer (see features/marketplace/order-flow.ts) and is brought up to date whenever it is read.
 //
 // Failure injection, for testing the UI's error states:
 //   curl 'localhost:8080/__fail?on=1'   every API call returns 503
@@ -15,6 +19,8 @@ import { DEMO_OTP, demoUsers } from '../src/features/auth/demo.ts'
 import { isEmail, isOtpCode, normalisePhone } from '../src/features/auth/validation.ts'
 import { faqs } from '../src/features/faq/data.ts'
 import { marketplaceItems } from '../src/features/marketplace/data.ts'
+import { advanceOrder, createOrderRecord, seedOrderRecords, startPayment, toPublicOrder } from '../src/features/marketplace/order-flow.ts'
+import { hasErrors, validateDelivery, validatePayment } from '../src/features/marketplace/validation.ts'
 import {
   approvedTributes,
   BIOGRAPHY_MAX_LENGTH,
@@ -53,6 +59,7 @@ const PHOTO_DATA_URL_MAX_LENGTH = 1_500_000
 const PHOTO_DATA_URL = /^data:image\/(jpeg|png|webp|svg\+xml)(;[\w=.+-]+)*,/
 const TRIBUTES_PER_HOUR = 5
 const OFFERINGS_PER_DAY = 20
+const ORDERS_PER_HOUR = 10
 const HOUR_MS = 3_600_000
 const DAY_MS = 86_400_000
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -65,6 +72,7 @@ let nextUserNumber = 1
 let nextMemorialNumber = 1
 let nextPhotoNumber = 1
 let nextTributeNumber = 1
+let nextOrderNumber = 1039 // the seeded orders are FS-1017 and FS-1038
 
 // Accounts, all in memory.
 const users = new Map(demoUsers.map((user) => [user.phone, { ...user }])) // phone -> User
@@ -79,6 +87,10 @@ const memorials = structuredClone(seedMemorials()) // MemorialRecord[], includin
 const tributesByMemorial = new Map(Object.entries(structuredClone(seedTributes()))) // memorial id -> Tribute[]
 const tributeHits = new Map() // `${memorial id}|${visitor}` -> timestamps of recent tributes
 const offeringHits = new Map() // `${memorial id}|${visitor}` -> timestamps of recent offerings
+
+// Marketplace orders, all in memory. Records include ownerId and the settlement state; toPublicOrder strips them.
+const orderRecords = new Map(seedOrderRecords().map((record) => [record.id, record])) // order id -> OrderRecord
+const orderHits = new Map() // user id -> timestamps of recent orders
 
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, { 'Content-Type': 'application/json', ...headers })
@@ -624,6 +636,154 @@ async function handleMemorials(req, res, pathname) {
   return send(res, 200, tribute), true
 }
 
+// ---- Marketplace orders ------------------------------------------------------------------------------------------
+
+const orderNotFound = (res) => problem(res, 404, 'not_found', 'No such order')
+
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
+
+// The order lifecycle lives in features/marketplace/order-flow.ts, shared with the browser mock. Reading an order
+// brings it up to date with the clock and stores the result.
+const currentOrder = (record) => {
+  const next = advanceOrder(record, Date.now())
+  orderRecords.set(next.id, next)
+  return next
+}
+
+// Shapes a JSON body into the types the shared validators expect, so a hostile body can never make them throw.
+// Anything of the wrong type is reported against its field instead.
+function readDelivery(value, errors) {
+  const source = isObject(value) ? value : {}
+  if (!isObject(value)) errors['delivery.recipientName'] = 'Send the delivery details'
+  const text = (key, optional = false) => {
+    const field = source[key]
+    if (typeof field === 'string') return field
+    if (field !== undefined && field !== null) errors[`delivery.${key}`] = 'Enter text'
+    return optional ? undefined : ''
+  }
+  return {
+    recipientName: text('recipientName'),
+    phone: text('phone'),
+    town: text('town'),
+    address: text('address'),
+    neededBy: text('neededBy', true),
+    note: text('note', true),
+  }
+}
+
+function readPayment(value, errors, prefix = '') {
+  const source = isObject(value) ? value : {}
+  if (typeof source.ecocashNumber !== 'string' && source.ecocashNumber !== undefined && source.ecocashNumber !== null) {
+    errors[`${prefix}ecocashNumber`] = 'Enter the Econet number that has your EcoCash wallet (077 or 078).'
+  }
+  return {
+    method: source.method,
+    ...(typeof source.ecocashNumber === 'string' && { ecocashNumber: source.ecocashNumber }),
+  }
+}
+
+// Keeps only what an order line may carry; a malformed line becomes an empty request that priceLines rejects.
+function readLines(value) {
+  if (!Array.isArray(value)) return []
+  return value.map((raw) => {
+    const options = isObject(raw?.options) && Object.values(raw.options).every((choice) => typeof choice === 'string') ? raw.options : null
+    return {
+      itemId: typeof raw?.itemId === 'string' ? raw.itemId : '',
+      options: options ?? { '': '' }, // an option group that no item has, so the line is rejected
+      quantity: raw?.quantity,
+      ...(typeof raw?.personalisation === 'string' && { personalisation: raw.personalisation }),
+    }
+  })
+}
+
+// Returns true once it has answered the request.
+async function handleOrders(req, res, pathname) {
+  const { method } = req
+  const routes = {
+    list: ['GET', '/me/orders'],
+    create: ['POST', '/me/orders'],
+    get: ['GET', '/me/orders/:id'],
+    pay: ['POST', '/me/orders/:id/payment'],
+  }
+  let route
+  let params
+  for (const [name, [routeMethod, pattern]] of Object.entries(routes)) {
+    params = routeMethod === method ? matchPath(pattern, pathname) : null
+    if (params) {
+      route = name
+      break
+    }
+  }
+  if (!route) return false
+
+  const user = sessionUser(req)
+  if (!user) return problem(res, 401, 'unauthenticated', 'Sign in required'), true
+
+  if (route === 'list') {
+    const mine = [...orderRecords.values()].filter((record) => record.ownerId === user.id).map(currentOrder)
+    return send(res, 200, mine.map(toPublicOrder).sort((a, b) => b.createdAt.localeCompare(a.createdAt))), true
+  }
+
+  if (route === 'create') {
+    const body = await readJson(req).catch(() => null)
+    if (!isObject(body)) return invalid(res, { lines: 'Send a JSON object' }), true
+
+    // Delivery, then payment, then lines. Every section is checked so one response lists everything to fix.
+    const errors = {}
+    const delivery = readDelivery(body.delivery, errors)
+    const payment = readPayment(body.payment, errors, 'payment.')
+    if (body.inMemoryOf !== undefined && body.inMemoryOf !== null && typeof body.inMemoryOf !== 'string') errors.inMemoryOf = 'Enter text'
+    const deliveryErrors = validateDelivery(delivery)
+    const paymentErrors = validatePayment(payment)
+    for (const [field, message] of Object.entries(deliveryErrors)) errors[`delivery.${field}`] ??= message
+    for (const [field, message] of Object.entries(paymentErrors)) errors[`payment.${field}`] ??= message
+
+    const lines = readLines(body.lines)
+    // Pricing reports only the first bad line, as priceLines does. The record is only kept once everything passes.
+    const pricing = createOrderRecord({
+      ownerId: user.id,
+      id: `o-${nextOrderNumber}`,
+      reference: `FS-${nextOrderNumber}`,
+      input: { lines, delivery: { ...delivery, phone: normalisePhone(delivery.phone) ?? delivery.phone }, payment, inMemoryOf: body.inMemoryOf ?? undefined },
+      now: Date.now(),
+      simulate: true,
+    })
+    if (!Array.isArray(body.lines)) errors.lines = 'Send a list of items'
+    else if (!pricing.ok) Object.assign(errors, pricing.details)
+    if (hasErrors(errors)) return invalid(res, errors), true
+
+    if (!withinLimit(orderHits, user.id, ORDERS_PER_HOUR, HOUR_MS)) return rateLimited(res), true
+
+    nextOrderNumber += 1
+    const record = pricing.record
+    // The mock has no hosted Paynow page to send the buyer to, so Paynow settles by itself, like EcoCash.
+    record.settle.auto = true
+    orderRecords.set(record.id, record)
+    return send(res, 201, toPublicOrder(record)), true
+  }
+
+  const found = orderRecords.get(params.id)
+  if (!found || found.ownerId !== user.id) return orderNotFound(res), true
+
+  if (route === 'get') return send(res, 200, toPublicOrder(currentOrder(found))), true
+
+  // pay: start a new payment attempt, after a failure or with a different method
+  const body = await readJson(req).catch(() => null)
+  const errors = {}
+  const payment = readPayment(body, errors)
+  Object.assign(errors, validatePayment(payment))
+  if (hasErrors(errors)) return invalid(res, errors), true
+
+  const record = currentOrder(found)
+  if (record.status !== 'awaiting_payment' && record.status !== 'payment_failed') {
+    return problem(res, 409, 'order_not_payable', 'This order is not waiting for payment'), true
+  }
+  const next = startPayment(record, payment, Date.now())
+  next.settle.auto = true // see above: Paynow settles by itself in the mock
+  orderRecords.set(next.id, next)
+  return send(res, 200, toPublicOrder(next)), true
+}
+
 async function handle(req, res) {
   const { pathname, searchParams } = new URL(req.url, 'http://localhost')
 
@@ -639,6 +799,12 @@ async function handle(req, res) {
   if (req.method === 'GET' && pathname === '/marketplace/items') {
     const category = searchParams.get('category')
     return send(res, 200, category ? marketplaceItems.filter((item) => item.category === category) : marketplaceItems)
+  }
+
+  if (req.method === 'GET' && pathname.startsWith('/marketplace/items/')) {
+    const params = matchPath('/marketplace/items/:id', pathname)
+    const item = params && marketplaceItems.find((candidate) => candidate.id === params.id)
+    return item ? send(res, 200, item) : problem(res, 404, 'not_found', 'No such item')
   }
 
   if (req.method === 'POST' && pathname === '/quote-requests') {
@@ -658,6 +824,9 @@ async function handle(req, res) {
   // Memorial routes first: `/me/memorials/...` must never fall through to the generic `/me` handling.
   if ((pathname.startsWith('/memorials/') || pathname.startsWith('/me/memorials')) && (await handleMemorials(req, res, pathname))) return
 
+  // Order routes before the generic /me handling.
+  if ((pathname === '/me/orders' || pathname.startsWith('/me/orders/')) && (await handleOrders(req, res, pathname))) return
+
   if ((pathname.startsWith('/auth/') || pathname === '/me' || pathname.startsWith('/me/')) && (await handleAccount(req, res, pathname))) return
 
   return problem(res, 404, 'not_found', 'No such endpoint')
@@ -672,5 +841,8 @@ http
     console.log(`Demo sign-in code for every number: ${DEMO_OTP}`)
     for (const user of demoUsers) console.log(`  ${user.phone}  ${user.name} (${user.role})`)
     console.log(`Memorials: public sample at /memorials/grace-nyathi, owned by +263771234567 (it has one tribute awaiting approval)`)
+    console.log(`Marketplace: sign in as +263771234567 to see two seeded orders (FS-1017 delivered, FS-1038 in progress)`)
+    console.log(`  An order created through the API walks paid -> confirmed -> in progress -> delivered over about 2.5 minutes`)
+    console.log(`  EcoCash 0780000000 is always declined (payment_failed); any other 077 or 078 number pays after about 4 seconds`)
     console.log(`Policies you can link: ${policyRecords.map((record) => record.policy.number).join(', ')}`)
   })

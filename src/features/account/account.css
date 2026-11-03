@@ -385,34 +385,6 @@
 
   .request-form { gap: var(--space-5); }
 
-  .choices { display: grid; gap: var(--space-3); margin: 0; padding: 0; border: 0; }
-
-  .choice {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease),
-      box-shadow var(--duration) var(--ease);
-  }
-
-  .choice:hover { border-color: var(--color-accent-border); }
-  .choice input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--color-accent); }
-  .choice__body { display: grid; line-height: 1.4; font-size: var(--text-sm); color: var(--color-text-muted); }
-  .choice__body strong { font-size: var(--text-md); color: var(--color-heading); }
-
-  .choice:has(input:checked) {
-    border-color: var(--color-accent);
-    background: var(--color-accent-tint);
-    box-shadow: 0 0 0 1px var(--color-accent);
-  }
-
-  .choice:has(input:focus-visible) { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
-
   .segmented { margin: 0; padding: 0; border: 0; display: grid; gap: var(--space-2); }
   .segmented__options { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
