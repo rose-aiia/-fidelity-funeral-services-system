@@ -10,6 +10,7 @@ import { MemorialsSection } from './sections/MemorialsSection'
 import { PathwaysSection } from './sections/PathwaysSection'
 import { ServicesSection } from './sections/ServicesSection'
 import { SupportSection } from './sections/SupportSection'
+import { VisitSection } from './sections/VisitSection'
 import { Reveal } from '@/components/ui/Reveal'
 import './home.css'
 
@@ -27,6 +28,7 @@ export function HomePage() {
       <Reveal><MarketplaceSection /></Reveal>
       <Reveal><ProviderTeaserSection /></Reveal>
       <Reveal><SupportSection /></Reveal>
+      <VisitSection />
       <Reveal><FaqSection /></Reveal>
     </>
   )

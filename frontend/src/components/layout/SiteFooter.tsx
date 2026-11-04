@@ -1,17 +1,21 @@
 import { Link } from 'react-router-dom'
 import { paths } from '@/config/routes'
-import { footerColumns, site } from '@/config/site'
+import { contact, footerColumns, site } from '@/config/site'
 import { Brand } from './Brand'
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" data-header-tone="dark">
       <div className="container footer-grid">
         <div className="footer-brand">
           <Brand to={paths.home} />
-          <p>
-            A prototype for compassionate, culturally aware funeral support, remembrance services and family-focused aftercare in Zimbabwe.
-          </p>
+          <p className="footer-tagline">Protecting what matters most.</p>
+          <address className="footer-contact">
+            <span>{contact.address.join(', ')}</span>
+            <a href={contact.phoneHref}>{contact.phone}</a>
+            <a href={contact.tollFreeHref}>Toll free {contact.tollFree}</a>
+            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </address>
         </div>
 
         {footerColumns.map((column) => (

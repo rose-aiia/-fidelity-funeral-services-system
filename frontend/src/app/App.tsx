@@ -29,6 +29,7 @@ const ProfilePage = lazy(() => import('@/features/account/ProfilePage'))
 const MemorialPage = lazy(() => import('@/features/memorials/MemorialPage'))
 const MemorialsPage = lazy(() => import('@/features/memorials/MemorialsPage'))
 const MemorialEditorPage = lazy(() => import('@/features/memorials/MemorialEditorPage'))
+const AboutPage = lazy(() => import('@/features/about/AboutPage'))
 const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
 const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
 const CheckoutPage = lazy(() => import('@/features/marketplace/CheckoutPage'))
@@ -47,6 +48,7 @@ export function App() {
               <Route element={<HomeLayout />}>
                 <Route index element={<HomePage />} />
                 <Route path={`${paths.memorials}/:slug`} element={<MemorialPage />} />
+                <Route path={paths.about} element={<AboutPage />} />
                 <Route path={paths.marketplace} element={<MarketplacePage />} />
                 <Route path={`${paths.marketplace}/:id`} element={<ProductPage />} />
                 <Route path="*" element={<NotFoundPage />} />

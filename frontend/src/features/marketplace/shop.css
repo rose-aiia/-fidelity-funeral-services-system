@@ -15,7 +15,7 @@
   /* ================= Shop pages ================= */
 
   .shop-hero {
-    padding-block: clamp(40px, 6vw, 72px);
+    padding-block: calc(var(--header-h) + clamp(32px, 5vw, 64px)) clamp(40px, 6vw, 72px);
     color: var(--color-on-inverse);
     background:
       radial-gradient(55% 90% at 90% 0%, rgba(226, 195, 123, 0.3), transparent 70%),
@@ -162,6 +162,9 @@
   }
 
   .cart-button:hover { background: rgba(255, 255, 255, 0.22); }
+
+  .site-header--adaptive.is-light .cart-button { background: rgba(36, 30, 20, 0.07); color: var(--color-heading); }
+  .site-header--adaptive.is-light .cart-button:hover { background: rgba(36, 30, 20, 0.14); }
 
   .cart-button__count {
     position: absolute;

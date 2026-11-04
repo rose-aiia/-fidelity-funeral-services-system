@@ -93,7 +93,7 @@ export default function CustomersPage() {
 function CustomerRow({ customer, onOpen }: { customer: AdminCustomer; onOpen: () => void }) {
   return (
     <tr onClick={onOpen}>
-      <td>
+      <td data-label="Customer">
         <button type="button" className="row-link" onClick={(event) => { event.stopPropagation(); onOpen() }}>
           {customer.name}
         </button>
@@ -101,7 +101,7 @@ function CustomerRow({ customer, onOpen }: { customer: AdminCustomer; onOpen: ()
           <span>{formatPhone(customer.phone)}</span>
         </span>
       </td>
-      <td>
+      <td data-label="Policy">
         {customer.policyNumber && customer.policyStatus ? (
           <span className="cell-stack">
             <strong>{customer.policyNumber}</strong>
@@ -113,13 +113,13 @@ function CustomerRow({ customer, onOpen }: { customer: AdminCustomer; onOpen: ()
           <span className="muted">No policy</span>
         )}
       </td>
-      <td className="num">
+      <td className="num" data-label="Requests">
         {customer.requestCount}
         {customer.openRequests > 0 && <span className="muted"> ({customer.openRequests} open)</span>}
       </td>
-      <td className="num">{customer.orderCount}</td>
-      <td className="num">{customer.memorialCount}</td>
-      <td className="num">{formatUsd(customer.totalSpend)}</td>
+      <td className="num" data-label="Orders">{customer.orderCount}</td>
+      <td className="num" data-label="Memorials">{customer.memorialCount}</td>
+      <td className="num" data-label="Spend">{formatUsd(customer.totalSpend)}</td>
     </tr>
   )
 }

@@ -92,24 +92,24 @@ export default function OrdersPage() {
                     const more = order.lines.length - 1
                     return (
                       <tr key={order.id} onClick={() => setParams({ focus: order.id }, { replace: true })}>
-                        <td>
+                        <td data-label="Order">
                           <button type="button" className="row-link" onClick={(event) => { event.stopPropagation(); setParams({ focus: order.id }, { replace: true }) }}>
                             {order.reference}
                           </button>
                           {order.shared && role === 'admin' && <span className="muted"> · shared</span>}
                         </td>
-                        <td>{order.customer.name}</td>
-                        <td>
+                        <td data-label="Customer">{order.customer.name}</td>
+                        <td data-label="Items">
                           <span className="cell-stack">
                             <strong>{order.lines[0]?.title}</strong>
                             {more > 0 && <span>+ {more} more</span>}
                           </span>
                         </td>
-                        <td className="num">{formatUsd(order.total)}</td>
-                        <td>
+                        <td className="num" data-label={role === 'admin' ? 'Total' : 'Your share'}>{formatUsd(order.total)}</td>
+                        <td data-label="Status">
                           <StatusChip tone={status.tone}>{status.label}</StatusChip>
                         </td>
-                        <td>{formatAge(order.createdAt)}</td>
+                        <td data-label="Placed">{formatAge(order.createdAt)}</td>
                       </tr>
                     )
                   })}

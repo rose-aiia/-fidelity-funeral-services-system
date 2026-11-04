@@ -9,10 +9,20 @@ export type NavLink = {
 export const site = {
   name: 'Fidelity Life Assurance of Zimbabwe',
   footerName: 'Fidelity Life Assurance of Zimbabwe',
-  logo: '/brand/logo.svg',
-  logoLight: '/brand/logo-light.svg',
-  mark: '/brand/mark.svg',
-  markLight: '/brand/mark-light.svg',
+  logo: '/brand/logo.png',
+  logoLight: '/brand/logo-light.png',
+  mark: '/brand/mark.png',
+  markLight: '/brand/mark-light.png',
+}
+
+/** Fidelity Life Assurance of Zimbabwe's published contact details (fidelitylife.co.zw). */
+export const contact = {
+  address: ['Fidelity House', '66 Julius Nyerere Way', 'Harare, Zimbabwe'],
+  phone: '+263 (242) 750927 - 34',
+  phoneHref: 'tel:+263242750927',
+  tollFree: '+263 8080835',
+  tollFreeHref: 'tel:+2638080835',
+  email: 'customercare@fidelitylife.co.zw',
 }
 
 export const primaryNav: NavLink[] = [
@@ -58,6 +68,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Plans', to: anchor('plans') },
       { label: 'Remembrance', to: anchor('memorials') },
       { label: 'Marketplace', to: paths.marketplace },
+      { label: 'Vision, mission and values', to: paths.about },
     ],
   },
   {

@@ -5,17 +5,22 @@ What changed in the front end (`frontend/`), newest first. The app runs on sampl
 ## Brand and landing page polish
 
 **Added**
-- A hero with room for a full-bleed photograph (`frontend/public/hero/hero.jpg`). Until it is added, an original dusk illustration shows, and it is also the fallback if the photo fails to load.
+- A hero led by the family photograph from Fidelity Life's own website: large, bleeding off the right edge and fading softly into the page, over an original dusk backdrop. If the photo fails to load, the hero is just the headline.
+- A transparent, adaptive header on the public pages: it sits over the hero with white text, and switches to dark text, the colour logo and a frosted background when the section behind it is light (sections declare `data-header-tone="dark"`; light is the default). Dark heroes slide up under it. The signed-in areas keep their solid header.
+- The header no longer lists page links (Services, Plans, Marketplace, Memorials, Support); only the logo and the Sign in, Request a quote and basket buttons remain, in the same positions. The mobile menu opens below the header instead of over it.
+- A "Visit or call us" section with a photograph of Fidelity House, the head office, and the company's address, phone and email.
+- An About page (`/about`) with Fidelity Life's own vision, mission and core values, linked from the footer, and the company's published contact details in the footer.
 - Four quick paths along the bottom of the hero (help now, plans, remembrance, marketplace).
 - A slim, dismissible "demonstration prototype" notice, replacing the badge that sat in the hero.
 - Fade-and-lift on scroll for sections (`Reveal`), switched off for people who prefer reduced motion. The header now turns translucent and slightly shorter once you scroll.
 - `docs/brand-assets.md` listing the files to supply and the guidance for the hero photograph.
 
 **Changed**
-- The logo: the scales mark with the name set as live text, one component for the header, footer and sign-in panel. No more hotlinked Google image, cropped logo box or duplicated company name. The mark and full logo in `public/brand/` are interim redraws to be replaced by the originals.
+- The logo: the company's real scales mark (from its website) with the name set as live text, one component for the header, footer and sign-in panel, and its site icon as the favicon. No more hotlinked Google image, cropped logo box or duplicated company name.
 - "Where would you like to start?" is a bento layout with a featured "someone has passed away" tile, and its emoji icons are now the app's stroke icons. Each tile links to its own section.
 - "What we arrange" is an editorial numbered list instead of six identical cards.
-- Hero copy and headline (one italic accent word); gold rule on section eyebrows; favicon is the scales mark.
+- The hero has no bottom bar of quick links any more, more breathing room above and below, and layered light and shade (glows, a vignette, a soft shadow into the next section, shadow behind the headline and button);
+- Hero copy and headline (one italic accent word); the stray horizontal streaks behind the hero photo are gone; gold rule on section eyebrows; favicon is the scales mark.
 
 **Removed**
 - The default Vite favicon and the old hand-drawn logo file.

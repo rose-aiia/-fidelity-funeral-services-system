@@ -70,7 +70,7 @@ function MemorialView({ memorial }: { memorial: Memorial }) {
         </div>
       )}
 
-      <header className="memorial-hero">
+      <header className="memorial-hero" data-header-tone="dark" data-header-overlay>
         <div className="memorial-hero__inner">
           <Portrait memorial={memorial} size="lg" />
           <p className="memorial-hero__eyebrow">In loving memory</p>

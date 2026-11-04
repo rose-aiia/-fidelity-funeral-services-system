@@ -19,7 +19,7 @@ export default function MarketplacePage() {
 
   return (
     <main id="main-content">
-      <header className="shop-hero">
+      <header className="shop-hero" data-header-tone="dark" data-header-overlay>
         <div className="container shop-hero__inner">
           <p className="eyebrow">Marketplace</p>
           <h1>Everything a family needs, from providers we trust.</h1>

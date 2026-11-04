@@ -91,29 +91,29 @@ export default function RequestsPage() {
                 <tbody>
                   {rows.map((request) => (
                     <tr key={request.id} onClick={() => setParams({ focus: request.id }, { replace: true })}>
-                      <td>
+                      <td data-label="Reference">
                         <button type="button" className="row-link" onClick={(event) => { event.stopPropagation(); setParams({ focus: request.id }, { replace: true }) }}>
                           {request.reference}
                         </button>
                         {request.urgent && <span className="urgent-tag">Urgent</span>}
                       </td>
-                      <td>
+                      <td data-label="Family">
                         <span className="cell-stack">
                           <strong>{request.customer.name}</strong>
                           <span>{formatPhone(request.customer.phone)}</span>
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Request">
                         <span className="cell-stack">
                           <strong>{requestKindLabel[request.kind]}</strong>
                           <span className="cell-excerpt">{request.message || 'No message'}</span>
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <StatusChip tone={requestStatusDisplay[request.status].tone}>{requestStatusDisplay[request.status].label}</StatusChip>
                       </td>
                       {role === 'admin' && (
-                        <td>
+                        <td data-label="Handled by">
                           {request.assignment ? (
                             <span className="cell-stack">
                               <strong>{request.assignment.providerName}</strong>
@@ -124,7 +124,7 @@ export default function RequestsPage() {
                           )}
                         </td>
                       )}
-                      <td>{formatAge(request.createdAt)}</td>
+                      <td data-label="Received">{formatAge(request.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

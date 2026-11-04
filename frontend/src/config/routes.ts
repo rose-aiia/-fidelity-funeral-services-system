@@ -18,6 +18,7 @@ export const paths = {
   memorials: '/memorials',
   marketplace: '/marketplace',
   checkout: '/checkout',
+  about: '/about',
 } as const
 
 /** Link to a section of the home page, e.g. `anchor('plans')` -> `/#plans`. */

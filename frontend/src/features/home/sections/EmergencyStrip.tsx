@@ -3,7 +3,7 @@ import { anchor } from '@/config/routes'
 
 export function EmergencyStrip() {
   return (
-    <section className="emergency-strip" aria-label="Emergency support details">
+    <section className="emergency-strip" data-header-tone="dark" aria-label="Emergency support details">
       <div className="container emergency-strip__inner">
         <div>
           <p className="eyebrow">Immediate assistance</p>

@@ -30,7 +30,7 @@
   .memorial-hero {
     position: relative;
     overflow: hidden;
-    padding: clamp(48px, 7vw, 88px) 20px clamp(104px, 12vw, 148px);
+    padding: calc(var(--header-h) + clamp(32px, 5vw, 72px)) 20px clamp(104px, 12vw, 148px);
     text-align: center;
     color: var(--color-on-inverse);
     background:
