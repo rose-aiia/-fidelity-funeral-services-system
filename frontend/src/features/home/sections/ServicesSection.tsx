@@ -1,56 +1,45 @@
-import { Icon, type IconName } from '@/components/ui/Icon'
+import { Link } from 'react-router-dom'
+import { Icon } from '@/components/ui/Icon'
+import { Reveal } from '@/components/ui/Reveal'
 import { Section } from '@/components/ui/Section'
-import { SectionHead } from '@/components/ui/SectionHead'
+import { anchor } from '@/config/routes'
 
-const services: { title: string; detail: string; icon: IconName }[] = [
-  {
-    title: 'Traditional funerals',
-    detail: 'Full service coordination for wakes, church services, burial ceremonies and family support.',
-    icon: 'shield',
-  },
-  {
-    title: 'Cremation & memorial services',
-    detail: 'Flexible memorial options with guided remembrance, keepsakes and family tribute spaces.',
-    icon: 'candle',
-  },
-  {
-    title: 'Repatriation support',
-    detail: 'Documentation, transport coordination and diaspora guidance for families abroad.',
-    icon: 'file',
-  },
-  {
-    title: 'Cemetery guidance',
-    detail: 'Plot search assistance, grave location support and local cemetery coordination.',
-    icon: 'map',
-  },
-  {
-    title: 'Digital memorials',
-    detail: 'Life stories, photo galleries and virtual tributes to honour loved ones online.',
-    icon: 'flower',
-  },
-  {
-    title: 'Aftercare & estate help',
-    detail: 'Task checklists, communication tools and post-funeral check-ins for relatives.',
-    icon: 'heart',
-  },
+const services = [
+  { title: 'Traditional funerals', detail: 'Wakes, church services and burial, coordinated from the first call to the last hymn.' },
+  { title: 'Cremation and memorial services', detail: 'Flexible options, with guided remembrance and keepsakes for the family.' },
+  { title: 'Repatriation', detail: 'Paperwork, transport and clear guidance for families abroad.' },
+  { title: 'Cemetery guidance', detail: 'Help finding a plot, locating a grave and working with the cemetery.' },
+  { title: 'Digital memorials', detail: 'A life story, photographs and tributes that relatives can visit from anywhere.' },
+  { title: 'Aftercare and estate help', detail: 'Practical checklists and check-ins once the service is over.' },
 ]
 
 export function ServicesSection() {
   return (
-    <Section id="services" soft>
-      <SectionHead eyebrow="Funeral services" title="Personalised support for every stage of the journey." />
+    <Section id="services" soft containerClassName="services">
+      <Reveal className="services__intro">
+        <p className="eyebrow">What we arrange</p>
+        <h2>Everything a funeral asks of a family, handled with you.</h2>
+        <p className="muted">
+          You decide what matters. We take care of the calls, the paperwork and the logistics around it.
+        </p>
+        <Link to={anchor('plans')} className="link-arrow">
+          See how plans work <Icon name="arrow-right" size={16} />
+        </Link>
+      </Reveal>
 
-      <div className="grid grid--3">
-        {services.map((item) => (
-          <article className="card stack service-card" key={item.title}>
-            <div className="icon-tile" aria-hidden="true">
-              <Icon name={item.icon} size={22} />
+      <ol className="services__list">
+        {services.map((item, index) => (
+          <Reveal as="li" key={item.title} index={index} className="services__item">
+            <span className="services__num" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.detail}</p>
             </div>
-            <h3>{item.title}</h3>
-            <p>{item.detail}</p>
-          </article>
+          </Reveal>
         ))}
-      </div>
+      </ol>
     </Section>
   )
 }

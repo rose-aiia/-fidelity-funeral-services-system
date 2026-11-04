@@ -1,26 +1,14 @@
 import { Link } from 'react-router-dom'
+import { paths } from '@/config/routes'
 import { footerColumns, site } from '@/config/site'
-
-function FooterBrand() {
-  return (
-    <div className="brand brand--footer">
-      <span className="brand__mark" aria-hidden="true">
-        <img src={site.logo} alt="" />
-      </span>
-      <span className="brand__text">
-        {site.footerName}
-        <small>Funeral services</small>
-      </span>
-    </div>
-  )
-}
+import { Brand } from './Brand'
 
 export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-brand">
-          <FooterBrand />
+          <Brand to={paths.home} />
           <p>
             A prototype for compassionate, culturally aware funeral support, remembrance services and family-focused aftercare in Zimbabwe.
           </p>

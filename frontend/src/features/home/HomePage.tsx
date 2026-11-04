@@ -10,6 +10,7 @@ import { MemorialsSection } from './sections/MemorialsSection'
 import { PathwaysSection } from './sections/PathwaysSection'
 import { ServicesSection } from './sections/ServicesSection'
 import { SupportSection } from './sections/SupportSection'
+import { Reveal } from '@/components/ui/Reveal'
 import './home.css'
 
 export function HomePage() {
@@ -19,14 +20,14 @@ export function HomePage() {
       <EmergencyStrip />
       <PathwaysSection />
       <ServicesSection />
-      <PlansSection />
-      <DiasporaSection />
-      <MemorialsSection />
-      <LegacyStudioSection />
-      <MarketplaceSection />
-      <ProviderTeaserSection />
-      <SupportSection />
-      <FaqSection />
+      <Reveal><PlansSection /></Reveal>
+      <Reveal><DiasporaSection /></Reveal>
+      <Reveal><MemorialsSection /></Reveal>
+      <Reveal><LegacyStudioSection /></Reveal>
+      <Reveal><MarketplaceSection /></Reveal>
+      <Reveal><ProviderTeaserSection /></Reveal>
+      <Reveal><SupportSection /></Reveal>
+      <Reveal><FaqSection /></Reveal>
     </>
   )
 }

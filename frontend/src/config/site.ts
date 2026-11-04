@@ -9,7 +9,10 @@ export type NavLink = {
 export const site = {
   name: 'Fidelity Life Assurance of Zimbabwe',
   footerName: 'Fidelity Life Assurance of Zimbabwe',
-  logo: '/fidelity-life-logo.svg',
+  logo: '/brand/logo.svg',
+  logoLight: '/brand/logo-light.svg',
+  mark: '/brand/mark.svg',
+  markLight: '/brand/mark-light.svg',
 }
 
 export const primaryNav: NavLink[] = [

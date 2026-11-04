@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { anchor, paths } from '@/config/routes'
 import { primaryNav } from '@/config/site'
@@ -9,8 +9,17 @@ import { Brand } from './Brand'
 
 export function HomeHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const { user } = useAuth()
+  const location = useLocation()
   const closeMenu = () => setIsMenuOpen(false)
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!isMenuOpen) return
@@ -21,8 +30,30 @@ export function HomeHeader() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [isMenuOpen])
 
+  // Close the drawer when the route changes.
+  const routeKey = location.pathname + location.hash
+  const [menuRoute, setMenuRoute] = useState(routeKey)
+  if (menuRoute !== routeKey) {
+    setMenuRoute(routeKey)
+    setIsMenuOpen(false)
+  }
+
+  // Lock page scroll while the drawer is open, and drop the lock if the viewport grows past the mobile breakpoint.
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const media = window.matchMedia('(min-width: 961px)')
+    const onChange = () => media.matches && setIsMenuOpen(false)
+    media.addEventListener('change', onChange)
+    return () => {
+      document.body.style.overflow = previous
+      media.removeEventListener('change', onChange)
+    }
+  }, [isMenuOpen])
+
   return (
-    <header className="site-header">
+    <header className={`site-header${isScrolled ? ' is-scrolled' : ''}`}>
       <div className="container site-header__inner">
         <Brand to={anchor('top')} />
 

@@ -56,7 +56,7 @@
 
   .portal-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
   .portal-toolbar__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .portal-search { min-width: 240px; }
+  .portal-search { min-width: min(240px, 100%); }
 
   .table-wrap { overflow-x: auto; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
 
@@ -67,6 +67,15 @@
   .data-table tbody tr:hover { background: var(--color-hover-tint); }
   .data-table tbody tr:last-child td { border-bottom: 0; }
   .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 960px) {
+    .table-wrap { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+    .data-table { min-width: 640px; }
+    .data-table th:first-child,
+    .data-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--color-surface); box-shadow: 1px 0 0 var(--color-border); }
+    .data-table th:first-child { background: var(--color-bg-soft); }
+    .data-table tbody tr:hover td:first-child { background: var(--color-hover-tint); }
+  }
 
   .row-link { padding: 0; background: none; border: 0; font: inherit; font-weight: 700; color: var(--color-heading); text-align: left; cursor: pointer; }
   .row-link:hover { color: var(--color-accent-strong); text-decoration: underline; text-underline-offset: 3px; }
@@ -111,7 +120,7 @@
 
   /* ================= Providers ================= */
 
-  .provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); }
+  .provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--space-4); }
 
   .provider-card { display: grid; gap: var(--space-4); transition: opacity var(--duration) var(--ease); }
   .provider-card--off { opacity: 0.7; background: var(--color-bg-soft); }
@@ -144,7 +153,7 @@
   .activity__body span { font-size: var(--text-sm); color: var(--color-text-muted); }
   .activity time { font-size: 0.82rem; color: var(--color-text-muted); white-space: nowrap; }
 
-  @media (max-width: 1080px) {
+  @media (max-width: 960px) {
     .overview-grid { grid-template-columns: minmax(0, 1fr); }
   }
 

@@ -2,6 +2,25 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Brand and landing page polish
+
+**Added**
+- A hero with room for a full-bleed photograph (`frontend/public/hero/hero.jpg`). Until it is added, an original dusk illustration shows, and it is also the fallback if the photo fails to load.
+- Four quick paths along the bottom of the hero (help now, plans, remembrance, marketplace).
+- A slim, dismissible "demonstration prototype" notice, replacing the badge that sat in the hero.
+- Fade-and-lift on scroll for sections (`Reveal`), switched off for people who prefer reduced motion. The header now turns translucent and slightly shorter once you scroll.
+- `docs/brand-assets.md` listing the files to supply and the guidance for the hero photograph.
+
+**Changed**
+- The logo: the scales mark with the name set as live text, one component for the header, footer and sign-in panel. No more hotlinked Google image, cropped logo box or duplicated company name. The mark and full logo in `public/brand/` are interim redraws to be replaced by the originals.
+- "Where would you like to start?" is a bento layout with a featured "someone has passed away" tile, and its emoji icons are now the app's stroke icons. Each tile links to its own section.
+- "What we arrange" is an editorial numbered list instead of six identical cards.
+- Hero copy and headline (one italic accent word); gold rule on section eyebrows; favicon is the scales mark.
+
+**Removed**
+- The default Vite favicon and the old hand-drawn logo file.
+- The page-load fade wrapper around every home section and the stray unlayered `.brand` rules in `components.css` (replaced by the scroll reveal and the new brand styles).
+
 ## Phase 4: staff portal (uncommitted at the time of writing)
 
 **Added**

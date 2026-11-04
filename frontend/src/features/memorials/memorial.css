@@ -327,7 +327,7 @@
   .memorial-report { margin-top: var(--space-7); text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); }
   .memorial-report a { color: var(--color-accent-strong); font-weight: 600; }
 
-  @media (max-width: 900px) {
+  @media (max-width: 960px) {
     .story,
     .tributes { grid-template-columns: minmax(0, 1fr); }
     .story__aside,

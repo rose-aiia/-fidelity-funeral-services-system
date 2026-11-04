@@ -137,6 +137,11 @@
 
   .section-head--left { max-width: none; margin: 0 0 28px; text-align: left; }
   .section-head :is(h1, h2) { margin: var(--space-3) 0; }
+
+  /* A short gold rule either side of a centred eyebrow, or before a left-aligned one. */
+  .section-head .eyebrow { display: inline-flex; align-items: center; gap: var(--space-3); }
+  .section-head .eyebrow::before,
+  .section-head:not(.section-head--left) .eyebrow::after { content: ''; width: 28px; height: 1px; background: var(--color-highlight); }
   .section-head h1 { font-size: var(--text-display-md); letter-spacing: -0.01em; }
 
   .eyebrow {

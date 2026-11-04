@@ -90,6 +90,7 @@ export function AppShell({ brandTo, subtitle, navLabel, nav, aside, showCart = f
           <Suspense fallback={<PageSkeleton label={loadingLabel} />}>
             <Outlet />
           </Suspense>
+          {aside && <div className="account-aside-mobile">{aside}</div>}
         </main>
       </div>
 

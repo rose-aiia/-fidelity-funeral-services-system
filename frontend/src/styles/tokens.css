@@ -124,6 +124,8 @@
     --container-w: 1140px;
     --header-h: 5rem;
     --tabbar-h: 4rem;
+    --tap-min: 44px;
+    /* Breakpoints (hard-coded in media queries): 640 phone, 960 tablet, 1200 large desktop. */
 
     /* ---- Stacking ---- */
     --z-header: 100;

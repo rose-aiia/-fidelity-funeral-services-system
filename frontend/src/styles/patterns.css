@@ -215,4 +215,13 @@
   }
   .empty { display: grid; justify-items: start; gap: var(--space-3); }
   .empty--large { justify-items: center; text-align: center; padding-block: var(--space-7); }
+
+  /* ---- Scroll reveal ---- */
+
+  .reveal-on-scroll:not(.is-visible) { opacity: 0; transform: translateY(20px); }
+
+  .reveal-on-scroll {
+    transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
 }
