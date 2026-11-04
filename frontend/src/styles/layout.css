@@ -37,6 +37,8 @@
   .sample-notice button:hover { background: var(--color-on-inverse-faint); }
 
   .site-header { transition: background var(--duration) var(--ease), box-shadow var(--duration) var(--ease); }
+  .site-header.site-header--adaptive.is-menu-open,
+  .site-header.site-header--adaptive.is-menu-open.is-scrolled { background: var(--color-inverse-deep); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .site-header.is-scrolled { background: rgba(20, 16, 20, 0.84); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   .site-header.is-scrolled .site-header__inner { height: 4.1rem; }
   .site-header__inner { transition: height var(--duration) var(--ease); }

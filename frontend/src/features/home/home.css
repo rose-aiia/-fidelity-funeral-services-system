@@ -73,7 +73,7 @@
     right: 0;
     bottom: 72px;
     width: min(62vw, 940px);
-    aspect-ratio: 750 / 376;
+    aspect-ratio: 547 / 365;
     margin: 0;
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%), linear-gradient(0deg, transparent 0%, #000 16%), linear-gradient(180deg, transparent 0%, #000 42%);
     -webkit-mask-composite: source-in, source-in;

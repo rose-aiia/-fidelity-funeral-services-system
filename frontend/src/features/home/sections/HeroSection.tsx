@@ -17,10 +17,10 @@ export function HeroSection() {
       {!photoFailed && (
         <figure className="hero__figure">
           <img
-            src="/hero/family.jpg"
-            alt="A family looking out together as the sun sets"
-            width={750}
-            height={376}
+            src="/hero/farewell.jpg"
+            alt="Mourners resting their hands on a coffin laid with white flowers"
+            width={547}
+            height={365}
             fetchPriority="high"
             decoding="async"
             onError={() => setPhotoFailed(true)}

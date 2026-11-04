@@ -89,7 +89,7 @@ export function HomeHeader() {
   return (
     <header
       ref={headerRef}
-      className={`site-header site-header--adaptive${isScrolled ? ' is-scrolled' : ''}${tone === 'light' && !isMenuOpen ? ' is-light' : ''}`}
+      className={`site-header site-header--adaptive${isScrolled ? ' is-scrolled' : ''}${isMenuOpen ? ' is-menu-open' : ''}${tone === 'light' && !isMenuOpen ? ' is-light' : ''}`}
     >
       <div className="container site-header__inner">
         <Brand to={anchor('top')} tone="auto" />

@@ -8,7 +8,7 @@ Files the site uses from `frontend/public/`. They come from Fidelity Life Assura
 | `brand/mark.png`, `brand/mark-light.png` | The scales symbol alone, colour and white. Used beside the live-text name in the header, footer and sign-in panel | Cropped from the logo |
 | `brand/icon.png` | Site icon: favicon and Apple touch icon | 300 x 300, from the company site |
 | `brand/head-office.jpg` | Photograph of Fidelity House, shown in the "Visit or call us" section | 1024 x 903, from the company site |
-| `hero/family.jpg` | The landing-page hero photograph | 750 x 376, cropped from the company's "Vision, Mission and Values" banner to remove its title and icon arc |
+| `hero/farewell.jpg` | Landing-page hero photograph: mourners with their hands on a coffin and white flowers | 547 x 365, a small web thumbnail. Source and licence not recorded: replace with a licensed, higher-resolution photograph (2000px or wider) before launch |
 
 Better originals, when available:
 - **Logo as SVG** (and a white SVG for dark backgrounds). The code does not change when a file is replaced by one with the same name; point `site.ts` at the new extension if it is not `.png`.
