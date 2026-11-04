@@ -69,19 +69,19 @@ export function HomeHeader() {
     setIsMenuOpen(false)
   }
 
-  // Lock page scroll while the drawer is open, and drop the lock if the viewport grows past the mobile breakpoint.
+  // The menu is a small popover under the button: close it on an outside click, and if the viewport grows past
+  // the breakpoint where the buttons sit in the header themselves.
   useEffect(() => {
     if (!isMenuOpen) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    // The drawer starts where the header ends, which is lower than the top of the page while the notice strip shows.
-    document.documentElement.style.setProperty('--header-bottom', `${headerRef.current?.getBoundingClientRect().bottom ?? 0}px`)
+    const onPointerDown = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) setIsMenuOpen(false)
+    }
     const media = window.matchMedia('(min-width: 961px)')
     const onChange = () => media.matches && setIsMenuOpen(false)
+    document.addEventListener('pointerdown', onPointerDown)
     media.addEventListener('change', onChange)
     return () => {
-      document.body.style.overflow = previous
-      document.documentElement.style.removeProperty('--header-bottom')
+      document.removeEventListener('pointerdown', onPointerDown)
       media.removeEventListener('change', onChange)
     }
   }, [isMenuOpen])
@@ -89,7 +89,7 @@ export function HomeHeader() {
   return (
     <header
       ref={headerRef}
-      className={`site-header site-header--adaptive${isScrolled ? ' is-scrolled' : ''}${isMenuOpen ? ' is-menu-open' : ''}${tone === 'light' && !isMenuOpen ? ' is-light' : ''}`}
+      className={`site-header site-header--adaptive${isScrolled ? ' is-scrolled' : ''}${tone === 'light' ? ' is-light' : ''}`}
     >
       <div className="container site-header__inner">
         <Brand to={anchor('top')} tone="auto" />

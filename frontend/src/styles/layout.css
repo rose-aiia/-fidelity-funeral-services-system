@@ -37,8 +37,6 @@
   .sample-notice button:hover { background: var(--color-on-inverse-faint); }
 
   .site-header { transition: background var(--duration) var(--ease), box-shadow var(--duration) var(--ease); }
-  .site-header.site-header--adaptive.is-menu-open,
-  .site-header.site-header--adaptive.is-menu-open.is-scrolled { background: var(--color-inverse-deep); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .site-header.is-scrolled { background: rgba(20, 16, 20, 0.84); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   .site-header.is-scrolled .site-header__inner { height: 4.1rem; }
   .site-header__inner { transition: height var(--duration) var(--ease); }
@@ -220,31 +218,41 @@
     .brand__text span { display: none; }
     .menu-toggle { display: inline-flex; }
 
+    .site-header__inner { position: relative; }
+
+    /* Two buttons don't need a whole page: the menu is a small card dropping from the button. */
     .site-nav {
-      position: fixed;
-      inset: var(--header-bottom, var(--header-h)) 0 0 0;
+      position: absolute;
+      top: calc(100% - 6px);
+      right: 20px;
+      left: auto;
+      width: min(280px, calc(100vw - 40px));
       z-index: var(--z-drawer);
-      background: var(--color-inverse-deep);
       flex-direction: column;
       align-items: stretch;
-      gap: var(--space-1);
-      padding: var(--space-5) 20px;
-      transform: translateY(-8px);
+      gap: var(--space-2);
+      margin: 0;
+      padding: var(--space-4);
+      background: var(--color-inverse-deep);
+      border: 1px solid var(--color-on-inverse-faint);
+      border-radius: var(--radius-md);
+      box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.6);
+      --outline-color: var(--white);
+      --outline-hover: var(--color-on-inverse-faint);
+      transform-origin: top right;
+      transform: translateY(-6px) scale(0.97);
       opacity: 0;
       visibility: hidden;
-      transition: opacity 200ms var(--ease), transform 200ms var(--ease), visibility 200ms var(--ease);
+      transition: opacity 160ms var(--ease), transform 160ms var(--ease), visibility 160ms var(--ease);
     }
 
     .site-nav.is-open { transform: none; opacity: 1; visibility: visible; }
-    .site-header.is-scrolled .site-nav { inset-block-start: 4.1rem; }
-    .site-nav { overflow-y: auto; overscroll-behavior: contain; }
     .menu-toggle { min-height: var(--tap-min, 44px); min-width: var(--tap-min, 44px); }
 
     .site-nav ul { flex-direction: column; align-items: stretch; gap: var(--space-1); }
     .site-nav li a { display: block; font-size: var(--text-lg); padding: var(--space-4) var(--space-3); }
-    .site-nav__cta { margin-top: var(--space-2); }
     .site-nav__signin,
-    .site-nav__account { margin-top: var(--space-4); justify-content: center; min-height: 48px; }
+    .site-nav__account { justify-content: center; min-height: 44px; }
   }
 
   /* ---- Footer ---- */

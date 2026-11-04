@@ -7,8 +7,8 @@ What changed in the front end (`frontend/`), newest first. The app runs on sampl
 **Added**
 - A hero led by a photograph of mourners resting their hands on a coffin with white flowers: large, bleeding off the right edge and fading softly into the page, over an original dusk backdrop. If the photo fails to load, the hero is just the headline.
 - A transparent, adaptive header on the public pages: it sits over the hero with white text, and switches to dark text, the colour logo and a frosted background when the section behind it is light (sections declare `data-header-tone="dark"`; light is the default). Dark heroes slide up under it. The signed-in areas keep their solid header.
-- Fixed the mobile menu breaking once the page had scrolled: the header's frosted blur made the open drawer position itself inside the header. The header is now solid while the menu is open.
-- The header no longer lists page links (Services, Plans, Marketplace, Memorials, Support); only the logo and the Sign in, Request a quote and basket buttons remain, in the same positions. The mobile menu opens below the header instead of over it.
+- Fixed the mobile menu breaking once the page had scrolled: the header's frosted blur made the open drawer position itself inside the header. The menu no longer covers the page at all.
+- The header no longer lists page links (Services, Plans, Marketplace, Memorials, Support); only the logo and the Sign in, Request a quote and basket buttons remain, in the same positions. On small screens the Menu button opens a small card under the button (closes on an outside click or Escape) instead of a full-screen panel.
 - A "Visit or call us" section with a photograph of Fidelity House, the head office, and the company's address, phone and email.
 - An About page (`/about`) with Fidelity Life's own vision, mission and core values, linked from the footer, and the company's published contact details in the footer.
 - Four quick paths along the bottom of the hero (help now, plans, remembrance, marketplace).
