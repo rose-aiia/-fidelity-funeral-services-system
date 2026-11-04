@@ -15,7 +15,7 @@ export function EmergencyStrip() {
           </p>
         </div>
         <Link to={anchor('quote-form')} className="btn btn--deep btn--lg">
-          Call support line
+          Request assistance
         </Link>
       </div>
     </section>

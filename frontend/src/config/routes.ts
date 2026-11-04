@@ -39,34 +39,34 @@ export const accountMemorialPath = (id: string, tab?: string) =>
 
 /** Document title per route; unknown paths fall back to the not-found title. */
 export const pageTitles: Record<string, string> = {
-  [paths.home]: 'Zimbabwe Funeral Service | Funeral Services, Memorials & Family Support',
-  [paths.provider]: 'Staff portal | Zimbabwe Funeral Service',
-  [paths.portalRequests]: 'Requests | Staff portal | Zimbabwe Funeral Service',
-  [paths.portalOrders]: 'Orders | Staff portal | Zimbabwe Funeral Service',
-  [paths.portalCustomers]: 'Customers | Staff portal | Zimbabwe Funeral Service',
-  [paths.portalProviders]: 'Providers | Staff portal | Zimbabwe Funeral Service',
-  [paths.portalActivity]: 'Activity | Staff portal | Zimbabwe Funeral Service',
-  [paths.login]: 'Sign in | Zimbabwe Funeral Service',
-  [paths.signup]: 'Create your account | Zimbabwe Funeral Service',
-  [paths.account]: 'My account | Zimbabwe Funeral Service',
-  [paths.accountPolicy]: 'My policy | Zimbabwe Funeral Service',
-  [paths.accountRequests]: 'My requests | Zimbabwe Funeral Service',
-  [paths.accountMemorials]: 'My memorials | Zimbabwe Funeral Service',
-  [paths.accountMemorialNew]: 'Create a memorial | Zimbabwe Funeral Service',
-  [paths.accountOrders]: 'My orders | Zimbabwe Funeral Service',
-  [paths.accountProfile]: 'Profile | Zimbabwe Funeral Service',
-  [paths.marketplace]: 'Marketplace | Zimbabwe Funeral Service',
-  [paths.checkout]: 'Checkout | Zimbabwe Funeral Service',
+  [paths.home]: 'Fidelity Life Assurance of Zimbabwe | Funeral Services, Memorials & Family Support',
+  [paths.provider]: 'Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.portalRequests]: 'Requests | Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.portalOrders]: 'Orders | Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.portalCustomers]: 'Customers | Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.portalProviders]: 'Providers | Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.portalActivity]: 'Activity | Staff portal | Fidelity Life Assurance of Zimbabwe',
+  [paths.login]: 'Sign in | Fidelity Life Assurance of Zimbabwe',
+  [paths.signup]: 'Create your account | Fidelity Life Assurance of Zimbabwe',
+  [paths.account]: 'My account | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountPolicy]: 'My policy | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountRequests]: 'My requests | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountMemorials]: 'My memorials | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountMemorialNew]: 'Create a memorial | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountOrders]: 'My orders | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountProfile]: 'Profile | Fidelity Life Assurance of Zimbabwe',
+  [paths.marketplace]: 'Marketplace | Fidelity Life Assurance of Zimbabwe',
+  [paths.checkout]: 'Checkout | Fidelity Life Assurance of Zimbabwe',
 }
 
-export const NOT_FOUND_TITLE = 'Page not found | Zimbabwe Funeral Service'
+export const NOT_FOUND_TITLE = 'Page not found | Fidelity Life Assurance of Zimbabwe'
 
 /** Routes whose title depends on the page content; the page sets the precise title itself once it loads. */
 const dynamicTitles: [prefix: string, title: string][] = [
-  [`${paths.memorials}/`, 'In memory | Zimbabwe Funeral Service'],
-  [`${paths.accountMemorials}/`, 'Edit memorial | Zimbabwe Funeral Service'],
-  [`${paths.marketplace}/`, 'Marketplace | Zimbabwe Funeral Service'],
-  [`${paths.accountOrders}/`, 'Order | Zimbabwe Funeral Service'],
+  [`${paths.memorials}/`, 'In memory | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountMemorials}/`, 'Edit memorial | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.marketplace}/`, 'Marketplace | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountOrders}/`, 'Order | Fidelity Life Assurance of Zimbabwe'],
 ]
 
 export function titleFor(pathname: string): string {

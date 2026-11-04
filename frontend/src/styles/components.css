@@ -120,6 +120,7 @@
 
   @media (max-width: 960px) {
     .split { grid-template-columns: 1fr; }
+    .grid--3 { grid-template-columns: repeat(2, 1fr); }
   }
 
   @media (max-width: 640px) {

@@ -43,7 +43,7 @@ import { seedProviders } from './providers-seed'
 
 const PROVIDERS_KEY = 'fidelity.mock.providers'
 const AUDIT_KEY = 'fidelity.mock.audit'
-const ADMIN_ACTOR = 'Zimbabwe Funeral Service'
+const ADMIN_ACTOR = 'Fidelity Life Assurance of Zimbabwe'
 
 function readJson<T>(key: string, fallback: T): T {
   try {

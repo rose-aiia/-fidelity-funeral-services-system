@@ -8,7 +8,7 @@ export type NavLink = {
 
 export const site = {
   name: 'Fidelity Life Assurance of Zimbabwe',
-  footerName: 'Zimbabwe Funeral Service',
+  footerName: 'Fidelity Life Assurance of Zimbabwe',
   logo: '/fidelity-life-logo.svg',
 }
 

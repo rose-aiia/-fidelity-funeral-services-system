@@ -65,7 +65,7 @@ function PaynowWaiting({ order }: { order: Order }) {
         <Icon name="lock" size={14} /> Paynow secure checkout <span className="hosted__demo">Demo</span>
       </p>
       <h2 id="hosted-title" className="panel__title">
-        Pay {formatUsd(order.payment.amount)} to Zimbabwe Funeral Service
+        Pay {formatUsd(order.payment.amount)} to Fidelity Life Assurance of Zimbabwe
       </h2>
       <p className="muted">
         This stands in for Paynow’s own page. In production you would be redirected there and brought back when you’re done.
