@@ -38,6 +38,7 @@ const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage
 const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
 const CemeteriesPage = lazy(() => import('@/features/cemeteries/CemeteriesPage'))
 const EstatePage = lazy(() => import('@/features/estate/EstatePage'))
+const AftercarePage = lazy(() => import('@/features/aftercare/AftercarePage'))
 const AboutPage = lazy(() => import('@/features/about/AboutPage'))
 const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
 const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
@@ -87,6 +88,7 @@ export function App() {
                   <Route path={paths.accountExhumationCoverage} element={<ExhumationCoveragePage />} />
                   <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
                   <Route path={paths.accountEstate} element={<EstatePage />} />
+                  <Route path={paths.accountAftercare} element={<AftercarePage />} />
                   <Route path={paths.accountOrders} element={<OrdersPage />} />
                   <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />

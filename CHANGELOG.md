@@ -2,6 +2,12 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Aftercare (BRD 6.9)
+
+**Added**
+- `/account/aftercare`: write thank-you messages to mourners from an editable template (saved as sent; nothing is delivered), set yearly anniversary and memorial reminders that show the next date and a countdown, and read follow-up support information with links to memorials and the estate checklist.
+- An "Aftercare" entry in the account navigation. The page is labelled as a demonstration and stores data in the browser only.
+
 ## Estate support (BRD 6.10)
 
 **Added**
