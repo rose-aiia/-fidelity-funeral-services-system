@@ -73,6 +73,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Plans', to: anchor('plans') },
       { label: 'Remembrance', to: anchor('memorials') },
       { label: 'Cemeteries & grave search', to: paths.cemeteries },
+      { label: 'Grief support assistant', to: paths.assistant },
       { label: 'Family History & Family Tree', to: paths.accountFamilyHistory },
       { label: 'Marketplace', to: paths.marketplace },
       { label: 'Vision, mission and values', to: paths.about },

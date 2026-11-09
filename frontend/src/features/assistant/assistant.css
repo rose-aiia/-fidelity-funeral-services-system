@@ -1,0 +1,12 @@
+@layer features {
+  .as-wrap { display: grid; gap: var(--space-4); max-width: 760px; margin-inline: auto; }
+  .as-log { display: grid; gap: var(--space-3); max-height: 28rem; overflow-y: auto; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .as-msg { max-width: 85%; padding: var(--space-3); border-radius: var(--radius-md); white-space: pre-wrap; }
+  .as-msg--bot { background: var(--color-bg); border: 1px solid var(--color-border); justify-self: start; }
+  .as-msg--user { background: var(--color-accent-soft, #f3ead2); justify-self: end; }
+  .as-msg--crisis { border-color: var(--color-danger); }
+  .as-tag { display: block; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 4px; }
+  .as-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .as-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: end; }
+  @media (max-width: 520px) { .as-form { grid-template-columns: 1fr; } }
+  .as-links { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }

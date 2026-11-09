@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { Section } from '@/components/ui/Section'
+import { paths } from '@/config/routes'
 
 export function SupportSection() {
   return (
@@ -9,6 +11,7 @@ export function SupportSection() {
         <p>
           The optional AI assistant offers guidance on grief resources, journaling prompts and remembrance exercises while clearly identifying AI-generated content and pointing users to professional help when needed.
         </p>
+        <Link className="btn btn--primary btn--sm" to={paths.assistant}>Try the demonstration assistant</Link>
       </div>
 
       <div className="card stack ai-card" aria-label="Sample AI grief support assistant">

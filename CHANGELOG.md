@@ -2,6 +2,13 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Grief support assistant (BRD 6.4)
+
+**Added**
+- A public `/support-assistant` page with a chat of pre-written answers: first steps after a death (linking to the estate checklist), journaling prompts, remembrance ideas, finding counselling, difficult dates, talking to children, and common grief feelings. Suggested questions and a clear-conversation button are included.
+- Safety and honesty come first: anything suggesting self-harm is answered with a message pointing to emergency services and human help, and questions about what it is (or whether it is the deceased) get a plain answer that it is a program, not a person, counsellor or therapist.
+- The page is labelled as a scripted demonstration, not AI; no AI service is called and nothing typed is sent or saved. Linked from the home page's support section and the footer.
+
 ## Funeral day: schedule, directions and procession sharing (BRD 6.11)
 
 **Added**
