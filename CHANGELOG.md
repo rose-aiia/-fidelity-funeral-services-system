@@ -2,6 +2,13 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Funeral day: schedule, directions and procession sharing (BRD 6.11)
+
+**Added**
+- `/account/funeral-day`: the day's programme (departure, service, burial) with times, addresses and directions.
+- Simulated procession sharing: the family invites relatives, ticks a consent box, picks 30, 60 or 120 minutes and starts sharing. Invited relatives see a route tracker with simulated movement, and the family can stop it at any time; it also ends on its own when the time is up.
+- The page never reads a device's location and says clearly that the venues and movement are fictional.
+
 ## Aftercare (BRD 6.9)
 
 **Added**
