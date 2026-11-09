@@ -85,6 +85,19 @@ const paths = {
   minus: <path d="M5 12h14" />,
   download: <path d="M12 4v11m-4-4 4 4 4-4M5 20h14" />,
   sparkle: <path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3zM19 17l.7 1.8L21.5 19.5l-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7L19 17z" />,
+  video: (
+    <>
+      <rect x="3" y="6" width="13" height="12" rx="2" />
+      <path d="m16 10 5-3v10l-5-3z" />
+    </>
+  ),
+  archive: (
+    <>
+      <path d="M4 7h16v13H4zM3 4h18v3H3z" />
+      <path d="M10 11h4" />
+    </>
+  ),
+  history: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />,
   map: (
     <>
       <path d="M12 21s-6.5-5.4-6.5-11a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11-6.5 11z" />

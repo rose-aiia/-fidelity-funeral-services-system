@@ -39,7 +39,9 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Overview', to: paths.account, icon: 'home', end: true },
   { label: 'My policy', to: paths.accountPolicy, icon: 'shield' },
   { label: 'Requests', to: paths.accountRequests, icon: 'chat' },
-  { label: 'Memorials', to: paths.accountMemorials, icon: 'flower' },
+  { label: 'Family History', to: paths.accountFamilyHistory, icon: 'users' },
+  { label: 'Records', to: paths.accountFuneralRecords, icon: 'archive' },
+  { label: 'Coverage', to: paths.accountFuneralStreaming, icon: 'video' },
   { label: 'Orders', to: paths.accountOrders, icon: 'bag' },
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
 ]
@@ -67,6 +69,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Services', to: anchor('services') },
       { label: 'Plans', to: anchor('plans') },
       { label: 'Remembrance', to: anchor('memorials') },
+      { label: 'Family History & Family Tree', to: paths.accountFamilyHistory },
       { label: 'Marketplace', to: paths.marketplace },
       { label: 'Vision, mission and values', to: paths.about },
     ],
@@ -76,6 +79,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     links: [
       { label: 'Repatriation', to: anchor('diaspora') },
       { label: 'AI support', to: anchor('support') },
+      { label: 'Funeral records & coverage', to: paths.accountFuneralRecords },
       { label: 'FAQs', to: anchor('faq') },
     ],
   },

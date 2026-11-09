@@ -41,9 +41,14 @@ export function MemorialsSection() {
           <p className="muted">
             Sample memorial content is clearly labelled as a demonstration of a digital remembrance experience.
           </p>
-          <Link className="btn btn--dark btn--sm" to={memorialPath('grace-nyathi')}>
-            See an example memorial
-          </Link>
+          <div className="cluster">
+            <Link className="btn btn--dark btn--sm" to={memorialPath('grace-nyathi')}>
+              See an example memorial
+            </Link>
+            <Link className="btn btn--outline btn--sm" to="/account/family-history">
+              Family History & Family Tree
+            </Link>
+          </div>
         </article>
       </div>
     </Section>

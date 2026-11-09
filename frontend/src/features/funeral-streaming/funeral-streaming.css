@@ -1,0 +1,19 @@
+@layer features {
+  .fs-grid { display: grid; gap: var(--space-5); }
+  .fs-two { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr); align-items: start; }
+  @media (max-width: 960px) { .fs-two { grid-template-columns: 1fr; } }
+  .fs-list { display: grid; gap: var(--space-4); }
+  .fs-card__top { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; }
+  .fs-player { border-radius: var(--radius-lg); overflow: hidden; background: radial-gradient(circle at top, #334 0%, #121722 45%, #07090d 100%); color: #f5f7ff; min-height: 320px; display: grid; place-items: center; padding: var(--space-5); border: 1px solid rgba(255,255,255,.08); position: relative; }
+  .fs-player__inner { text-align: center; display: grid; gap: var(--space-3); justify-items: center; max-width: 560px; }
+  .fs-player__badge { position: absolute; top: 14px; left: 14px; }
+  .fs-sim { font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #ffe08a; background: rgba(184,146,58,.18); border: 1px solid rgba(226,195,123,.45); padding: 4px 10px; border-radius: var(--radius-pill); }
+  .fs-kv { display: grid; gap: var(--space-2); }
+  .fs-kv div { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+  .fs-kv span { color: var(--color-text-muted); }
+  .fs-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .fs-viewers { display: grid; gap: var(--space-2); }
+  .fs-viewer { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .fs-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .fs-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+}

@@ -29,6 +29,13 @@ const ProfilePage = lazy(() => import('@/features/account/ProfilePage'))
 const MemorialPage = lazy(() => import('@/features/memorials/MemorialPage'))
 const MemorialsPage = lazy(() => import('@/features/memorials/MemorialsPage'))
 const MemorialEditorPage = lazy(() => import('@/features/memorials/MemorialEditorPage'))
+const FamilyHistoryPage = lazy(() => import('@/features/family-history/FamilyHistoryPage'))
+const FuneralRecordsPage = lazy(() => import('@/features/funeral-records/FuneralRecordsPage'))
+const FuneralRecordPage = lazy(() => import('@/features/funeral-records/FuneralRecordPage'))
+const FuneralStreamingPage = lazy(() => import('@/features/funeral-streaming/FuneralStreamingPage'))
+const FuneralStreamingDetailPage = lazy(() => import('@/features/funeral-streaming/FuneralStreamingDetailPage'))
+const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoveragePage'))
+const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
 const AboutPage = lazy(() => import('@/features/about/AboutPage'))
 const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
 const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
@@ -67,8 +74,15 @@ export function App() {
                   <Route path={paths.account} element={<DashboardPage />} />
                   <Route path={paths.accountPolicy} element={<PolicyPage />} />
                   <Route path={paths.accountRequests} element={<RequestsPage />} />
+                  <Route path={paths.accountFamilyHistory} element={<FamilyHistoryPage />} />
                   <Route path={paths.accountMemorials} element={<MemorialsPage />} />
                   <Route path={`${paths.accountMemorials}/:id`} element={<MemorialEditorPage />} />
+                  <Route path={paths.accountFuneralRecords} element={<FuneralRecordsPage />} />
+                  <Route path={`${paths.accountFuneralRecords}/:id`} element={<FuneralRecordPage />} />
+                  <Route path={paths.accountFuneralStreaming} element={<FuneralStreamingPage />} />
+                  <Route path={`${paths.accountFuneralStreaming}/:id`} element={<FuneralStreamingDetailPage />} />
+                  <Route path={paths.accountExhumationCoverage} element={<ExhumationCoveragePage />} />
+                  <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
                   <Route path={paths.accountOrders} element={<OrdersPage />} />
                   <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />

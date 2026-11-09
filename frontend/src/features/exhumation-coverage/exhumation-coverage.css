@@ -1,0 +1,20 @@
+@layer features {
+  .exh-grid { display: grid; gap: var(--space-5); }
+  .exh-two { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr); align-items: start; }
+  @media (max-width: 960px) { .exh-two { grid-template-columns: 1fr; } }
+  .exh-restricted-banner { display: flex; gap: var(--space-3); align-items: start; padding: var(--space-4); border-radius: var(--radius-md); background: linear-gradient(180deg, #fff1f2, #fff8f8); border: 1px solid var(--color-accent-border); color: var(--color-heading); }
+  .exh-restricted-banner strong { color: var(--color-accent-deep); }
+  .exh-panel { border: 1px solid var(--color-accent-border); box-shadow: 0 0 0 1px rgba(200,16,46,.04), var(--shadow-sm); }
+  .exh-player { border-radius: var(--radius-lg); overflow: hidden; background: linear-gradient(180deg, #1d1014, #090708); color: #fff4f4; min-height: 300px; display: grid; place-items: center; padding: var(--space-5); border: 1px solid rgba(215,163,175,.35); position: relative; }
+  .exh-player__inner { text-align: center; display: grid; gap: var(--space-3); justify-items: center; max-width: 580px; }
+  .exh-sim { position: absolute; top: 14px; left: 14px; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #ffd9df; background: rgba(123,30,43,.35); border: 1px solid rgba(215,163,175,.45); padding: 4px 10px; border-radius: var(--radius-pill); }
+  .exh-kv { display: grid; gap: var(--space-2); }
+  .exh-kv div { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+  .exh-kv span { color: var(--color-text-muted); }
+  .exh-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .exh-viewers, .exh-audit { display: grid; gap: var(--space-2); }
+  .exh-row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .exh-audit .exh-row { background: var(--color-bg-soft); }
+  .exh-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+  .exh-gate { display: grid; gap: var(--space-4); justify-items: start; }
+}
