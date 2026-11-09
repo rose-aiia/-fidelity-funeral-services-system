@@ -2,6 +2,19 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Estate support (BRD 6.10)
+
+**Added**
+- `/account/estate`: a post-death checklist grouped by stage with a progress bar, a document list, appointments, and estate contacts. Users can add their own tasks and reset the list. It is saved in the browser only and states plainly that it is organisational help, not legal advice.
+- An "Estate" entry in the account navigation.
+
+## Cemetery and grave search (BRD 6.1)
+
+**Added**
+- A public `/cemeteries` page: search sample cemeteries by town or area, see published plot price guidance, availability, opening hours, contact details and directions, and send a plot enquiry (stored in the browser only).
+- Grave search by name and optional year of death, showing section and plot, with records the operator has not verified clearly flagged.
+- Links from the home page's cemetery card and the footer. All data is fictional and labelled as a demonstration.
+
 ## Brand and landing page polish
 
 **Added**

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Icon } from '@/components/ui/Icon'
 import { Section } from '@/components/ui/Section'
 import { SectionHead } from '@/components/ui/SectionHead'
-import { memorialPath } from '@/config/routes'
+import { memorialPath, paths } from '@/config/routes'
 
 export function MemorialsSection() {
   return (
@@ -22,6 +22,7 @@ export function MemorialsSection() {
             <li>2 plot enquiry requests</li>
             <li>Verified records by authorised operators</li>
           </ul>
+          <Link className="btn btn--primary btn--sm" to={paths.cemeteries}>Search cemeteries and graves</Link>
         </article>
 
         <article className="card stack memorial-card">

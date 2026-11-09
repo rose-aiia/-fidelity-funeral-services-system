@@ -1,0 +1,14 @@
+@layer features {
+  .est-grid { display: grid; gap: var(--space-5); }
+  .est-two { display: grid; gap: var(--space-5); grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  @media (max-width: 900px) { .est-two { grid-template-columns: 1fr; } }
+  .est-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .est-item { display: flex; gap: var(--space-3); align-items: start; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .est-item label { display: grid; gap: 2px; flex: 1; cursor: pointer; }
+  .est-item input[type='checkbox'] { margin-top: 4px; }
+  .est-item--done strong { text-decoration: line-through; color: var(--color-text-muted); }
+  .est-hint { font-size: var(--text-sm); color: var(--color-text-muted); }
+  .est-bar { height: 8px; border-radius: 99px; background: var(--color-border); overflow: hidden; }
+  .est-bar > span { display: block; height: 100%; background: var(--color-accent, #b8923a); }
+  .est-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .est-row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; }

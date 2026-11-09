@@ -36,6 +36,8 @@ const FuneralStreamingPage = lazy(() => import('@/features/funeral-streaming/Fun
 const FuneralStreamingDetailPage = lazy(() => import('@/features/funeral-streaming/FuneralStreamingDetailPage'))
 const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoveragePage'))
 const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
+const CemeteriesPage = lazy(() => import('@/features/cemeteries/CemeteriesPage'))
+const EstatePage = lazy(() => import('@/features/estate/EstatePage'))
 const AboutPage = lazy(() => import('@/features/about/AboutPage'))
 const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
 const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
@@ -56,6 +58,7 @@ export function App() {
                 <Route index element={<HomePage />} />
                 <Route path={`${paths.memorials}/:slug`} element={<MemorialPage />} />
                 <Route path={paths.about} element={<AboutPage />} />
+                <Route path={paths.cemeteries} element={<CemeteriesPage />} />
                 <Route path={paths.marketplace} element={<MarketplacePage />} />
                 <Route path={`${paths.marketplace}/:id`} element={<ProductPage />} />
                 <Route path="*" element={<NotFoundPage />} />
@@ -83,6 +86,7 @@ export function App() {
                   <Route path={`${paths.accountFuneralStreaming}/:id`} element={<FuneralStreamingDetailPage />} />
                   <Route path={paths.accountExhumationCoverage} element={<ExhumationCoveragePage />} />
                   <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
+                  <Route path={paths.accountEstate} element={<EstatePage />} />
                   <Route path={paths.accountOrders} element={<OrdersPage />} />
                   <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />

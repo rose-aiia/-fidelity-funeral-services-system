@@ -1,0 +1,11 @@
+@layer features {
+  .cem-search { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  @media (max-width: 640px) { .cem-search { grid-template-columns: 1fr; } }
+  .cem-list { display: grid; gap: var(--space-4); }
+  .cem-top { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; align-items: start; }
+  .cem-kv div { display: flex; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+  .cem-kv span { color: var(--color-text-muted); }
+  .cem-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .cem-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .cem-check { display: flex; gap: 8px; align-items: center; padding-bottom: 12px; }
+}

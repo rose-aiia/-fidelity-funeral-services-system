@@ -42,6 +42,7 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Family History', to: paths.accountFamilyHistory, icon: 'users' },
   { label: 'Records', to: paths.accountFuneralRecords, icon: 'archive' },
   { label: 'Coverage', to: paths.accountFuneralStreaming, icon: 'video' },
+  { label: 'Estate', to: paths.accountEstate, icon: 'file' },
   { label: 'Orders', to: paths.accountOrders, icon: 'bag' },
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
 ]
@@ -69,6 +70,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Services', to: anchor('services') },
       { label: 'Plans', to: anchor('plans') },
       { label: 'Remembrance', to: anchor('memorials') },
+      { label: 'Cemeteries & grave search', to: paths.cemeteries },
       { label: 'Family History & Family Tree', to: paths.accountFamilyHistory },
       { label: 'Marketplace', to: paths.marketplace },
       { label: 'Vision, mission and values', to: paths.about },
