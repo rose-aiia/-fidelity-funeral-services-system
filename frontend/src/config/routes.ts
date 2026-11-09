@@ -13,6 +13,10 @@ export const paths = {
   accountRequests: '/account/requests',
   accountMemorials: '/account/memorials',
   accountMemorialNew: '/account/memorials/new',
+  accountFamilyHistory: '/account/family-history',
+  accountFuneralRecords: '/account/funeral-records',
+  accountFuneralStreaming: '/account/funeral-streaming',
+  accountExhumationCoverage: '/account/exhumation-coverage',
   accountOrders: '/account/orders',
   accountProfile: '/account/profile',
   memorials: '/memorials',
@@ -38,6 +42,10 @@ export const orderPath = (id: string, query = '') => `${paths.accountOrders}/${i
 export const accountMemorialPath = (id: string, tab?: string) =>
   `${paths.accountMemorials}/${id}${tab ? `?tab=${tab}` : ''}`
 
+export const funeralRecordPath = (id: string) => `${paths.accountFuneralRecords}/${id}`
+export const funeralStreamingPath = (id: string) => `${paths.accountFuneralStreaming}/${id}`
+export const exhumationCoveragePath = (id: string) => `${paths.accountExhumationCoverage}/${id}`
+
 /** Document title per route; unknown paths fall back to the not-found title. */
 export const pageTitles: Record<string, string> = {
   [paths.home]: 'Fidelity Life Assurance of Zimbabwe | Funeral Services, Memorials & Family Support',
@@ -52,8 +60,12 @@ export const pageTitles: Record<string, string> = {
   [paths.account]: 'My account | Fidelity Life Assurance of Zimbabwe',
   [paths.accountPolicy]: 'My policy | Fidelity Life Assurance of Zimbabwe',
   [paths.accountRequests]: 'My requests | Fidelity Life Assurance of Zimbabwe',
-  [paths.accountMemorials]: 'My memorials | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountMemorials]: 'Family history & memorials | Fidelity Life Assurance of Zimbabwe',
   [paths.accountMemorialNew]: 'Create a memorial | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountFamilyHistory]: 'Family history & family tree | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountFuneralRecords]: 'Digital funeral records | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountFuneralStreaming]: 'Live funeral coverage | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountExhumationCoverage]: 'Exhumation coverage (restricted) | Fidelity Life Assurance of Zimbabwe',
   [paths.accountOrders]: 'My orders | Fidelity Life Assurance of Zimbabwe',
   [paths.accountProfile]: 'Profile | Fidelity Life Assurance of Zimbabwe',
   [paths.marketplace]: 'Marketplace | Fidelity Life Assurance of Zimbabwe',
@@ -66,6 +78,9 @@ export const NOT_FOUND_TITLE = 'Page not found | Fidelity Life Assurance of Zimb
 const dynamicTitles: [prefix: string, title: string][] = [
   [`${paths.memorials}/`, 'In memory | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountMemorials}/`, 'Edit memorial | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountFuneralRecords}/`, 'Funeral record | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountFuneralStreaming}/`, 'Funeral coverage | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountExhumationCoverage}/`, 'Exhumation coverage | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.marketplace}/`, 'Marketplace | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountOrders}/`, 'Order | Fidelity Life Assurance of Zimbabwe'],
 ]

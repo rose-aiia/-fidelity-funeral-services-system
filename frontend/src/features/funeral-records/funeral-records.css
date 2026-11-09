@@ -1,0 +1,41 @@
+@layer features {
+  .fr-grid { display: grid; gap: var(--space-5); }
+  .fr-two { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1.3fr) minmax(280px, .9fr); align-items: start; }
+  @media (max-width: 960px) { .fr-two { grid-template-columns: 1fr; } }
+  .fr-list { display: grid; gap: var(--space-4); }
+  .fr-card { display: grid; gap: var(--space-3); }
+  .fr-card__top { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; }
+  .fr-timeline { display: grid; gap: 0; position: relative; }
+  .fr-step { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); padding: var(--space-3) 0; position: relative; }
+  .fr-step:not(:last-child)::after { content: ''; position: absolute; left: 13px; top: 34px; bottom: -4px; width: 2px; background: var(--color-border); }
+  .fr-step__dot { width: 28px; height: 28px; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--color-bg); border: 2px solid var(--color-border); color: var(--color-text-muted); font-size: .78rem; font-weight: 700; position: relative; z-index: 1; }
+  .fr-step.is-done .fr-step__dot { background: var(--color-success-tint); border-color: var(--color-success); color: var(--color-success); }
+  .fr-step h3 { margin: 0; font-size: 1rem; }
+  .fr-step p { margin: 2px 0 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+  .fr-media { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); }
+  .fr-media__item { margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface); }
+  .fr-media__item button, .fr-media__item .fr-media__static { width: 100%; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; color: inherit; }
+  .fr-media__thumb { aspect-ratio: 4/3; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-inverse), var(--color-inverse-deep)); color: var(--color-on-inverse); position: relative; }
+  .fr-media__thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .fr-media__kind { position: absolute; top: 8px; left: 8px; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); background: rgba(0,0,0,.55); }
+  .fr-media__body { padding: var(--space-3); display: grid; gap: 2px; }
+  .fr-media__body strong { font-size: var(--text-sm); color: var(--color-heading); }
+  .fr-media__body span { font-size: .82rem; color: var(--color-text-muted); }
+  .fr-docs { display: grid; gap: var(--space-2); }
+  .fr-doc { display: flex; justify-content: space-between; gap: var(--space-3); align-items: center; flex-wrap: wrap; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-soft); }
+  .fr-doc__main { display: flex; gap: var(--space-3); align-items: center; }
+  .fr-access, .fr-audit { display: grid; gap: var(--space-2); }
+  .fr-access__row, .fr-audit__row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; flex-wrap: wrap; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .fr-audit__row { background: var(--color-bg-soft); }
+  .fr-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .fr-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .fr-form-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0,1fr)); }
+  @media (max-width: 640px) { .fr-form-grid { grid-template-columns: 1fr; } }
+  .fr-dialog::backdrop { background: rgba(10,10,10,.75); }
+  .fr-dialog { border: 0; border-radius: var(--radius-lg); padding: 0; max-width: min(92vw, 760px); width: 100%; background: var(--color-surface); box-shadow: var(--shadow-lg); }
+  .fr-dialog__inner { padding: var(--space-5); display: grid; gap: var(--space-3); }
+  .fr-dialog__media { border-radius: var(--radius-md); overflow: hidden; background: var(--color-inverse-deep); color: var(--color-on-inverse); min-height: 220px; display: grid; place-items: center; }
+  .fr-dialog__media img { width: 100%; max-height: 60vh; object-fit: contain; }
+  .fr-dialog__player { padding: var(--space-6); text-align: center; display: grid; gap: var(--space-3); justify-items: center; }
+  .fr-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+}

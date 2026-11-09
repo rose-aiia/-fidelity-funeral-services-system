@@ -19,13 +19,17 @@ export default function MemorialsPage() {
         <div>
           <p className="eyebrow">Memorials</p>
           <h1>Keep their story alive.</h1>
+          <p className="muted" style={{ marginTop: 'var(--space-2)' }}>Digital memorials can be connected to your Family History and Family Tree.</p>
         </div>
-        {memorials.data && memorials.data.length > 0 && (
-          <Link className="btn btn--primary" to={paths.accountMemorialNew}>
-            <Icon name="plus" size={18} />
-            Create a memorial
-          </Link>
-        )}
+        <div className="cluster">
+          <Link className="btn btn--outline" to={paths.accountFamilyHistory}>Family History & Family Tree</Link>
+          {memorials.data && memorials.data.length > 0 && (
+            <Link className="btn btn--primary" to={paths.accountMemorialNew}>
+              <Icon name="plus" size={18} />
+              Create a memorial
+            </Link>
+          )}
+        </div>
       </header>
 
       {memorials.data ? (
