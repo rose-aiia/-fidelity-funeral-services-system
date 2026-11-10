@@ -18,6 +18,9 @@ export const paths = {
   accountFuneralStreaming: '/account/funeral-streaming',
   accountExhumationCoverage: '/account/exhumation-coverage',
   accountChemaWallet: '/account/chema-wallet',
+  accountEstate: '/account/estate',
+  accountAftercare: '/account/aftercare',
+  accountProcession: '/account/funeral-day',
   accountOrders: '/account/orders',
   accountProfile: '/account/profile',
   memorials: '/memorials',
@@ -25,6 +28,8 @@ export const paths = {
   checkout: '/checkout',
   contribute: '/contribute',
   about: '/about',
+  cemeteries: '/cemeteries',
+  assistant: '/support-assistant',
 } as const
 
 /** Link to a section of the home page, e.g. `anchor('plans')` -> `/#plans`. */
@@ -72,8 +77,13 @@ export const pageTitles: Record<string, string> = {
   [paths.accountFuneralStreaming]: 'Live funeral coverage | Fidelity Life Assurance of Zimbabwe',
   [paths.accountExhumationCoverage]: 'Exhumation coverage (restricted) | Fidelity Life Assurance of Zimbabwe',
   [paths.accountChemaWallet]: 'Chema Wallet | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountEstate]: 'Estate support | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountAftercare]: 'Aftercare | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountProcession]: 'Funeral day | Fidelity Life Assurance of Zimbabwe',
   [paths.accountOrders]: 'My orders | Fidelity Life Assurance of Zimbabwe',
   [paths.accountProfile]: 'Profile | Fidelity Life Assurance of Zimbabwe',
+  [paths.cemeteries]: 'Cemeteries & grave search | Fidelity Life Assurance of Zimbabwe',
+  [paths.assistant]: 'Grief support assistant (demonstration) | Fidelity Life Assurance of Zimbabwe',
   [paths.marketplace]: 'Marketplace | Fidelity Life Assurance of Zimbabwe',
   [paths.checkout]: 'Checkout | Fidelity Life Assurance of Zimbabwe',
 }

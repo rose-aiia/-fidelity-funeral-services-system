@@ -1,0 +1,14 @@
+@layer features {
+  .pr-grid { display: grid; gap: var(--space-5); }
+  .pr-stops { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+  .pr-stop { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; }
+  .pr-time { font-weight: 700; min-width: 3.5rem; }
+  .pr-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .pr-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+  .pr-track { position: relative; display: grid; grid-auto-flow: column; justify-content: space-between; align-items: start; padding-top: 22px; margin: var(--space-4) 0 var(--space-2); }
+  .pr-track::before { content: ''; position: absolute; left: 6px; right: 6px; top: 6px; height: 4px; border-radius: 4px; background: var(--color-border); }
+  .pr-fill { position: absolute; left: 6px; top: 6px; height: 4px; border-radius: 4px; background: var(--color-accent, #b8923a); max-width: calc(100% - 12px); transition: width .9s linear; }
+  .pr-dot { position: relative; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: var(--text-sm); max-width: 9rem; }
+  .pr-dot::before { content: ''; position: absolute; top: -22px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-bg); border: 3px solid var(--color-border); }
+  .pr-dot--done::before { border-color: var(--color-accent, #b8923a); background: var(--color-accent, #b8923a); }
+  .pr-hint { font-size: var(--text-sm); color: var(--color-text-muted); }

@@ -1,0 +1,9 @@
+@layer features {
+  .af-grid { display: grid; gap: var(--space-5); }
+  .af-two { display: grid; gap: var(--space-5); grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  @media (max-width: 900px) { .af-two { grid-template-columns: 1fr; } }
+  .af-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .af-item { display: flex; gap: var(--space-3); justify-content: space-between; align-items: start; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .af-form { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+  .af-hint { font-size: var(--text-sm); color: var(--color-text-muted); }
+  .af-message { white-space: pre-wrap; }

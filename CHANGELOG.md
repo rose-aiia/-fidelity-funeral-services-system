@@ -2,6 +2,39 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## Grief support assistant (BRD 6.4)
+
+**Added**
+- A public `/support-assistant` page with a chat of pre-written answers: first steps after a death (linking to the estate checklist), journaling prompts, remembrance ideas, finding counselling, difficult dates, talking to children, and common grief feelings. Suggested questions and a clear-conversation button are included.
+- Safety and honesty come first: anything suggesting self-harm is answered with a message pointing to emergency services and human help, and questions about what it is (or whether it is the deceased) get a plain answer that it is a program, not a person, counsellor or therapist.
+- The page is labelled as a scripted demonstration, not AI; no AI service is called and nothing typed is sent or saved. Linked from the home page's support section and the footer.
+
+## Funeral day: schedule, directions and procession sharing (BRD 6.11)
+
+**Added**
+- `/account/funeral-day`: the day's programme (departure, service, burial) with times, addresses and directions.
+- Simulated procession sharing: the family invites relatives, ticks a consent box, picks 30, 60 or 120 minutes and starts sharing. Invited relatives see a route tracker with simulated movement, and the family can stop it at any time; it also ends on its own when the time is up.
+- The page never reads a device's location and says clearly that the venues and movement are fictional.
+
+## Aftercare (BRD 6.9)
+
+**Added**
+- `/account/aftercare`: write thank-you messages to mourners from an editable template (saved as sent; nothing is delivered), set yearly anniversary and memorial reminders that show the next date and a countdown, and read follow-up support information with links to memorials and the estate checklist.
+- An "Aftercare" entry in the account navigation. The page is labelled as a demonstration and stores data in the browser only.
+
+## Estate support (BRD 6.10)
+
+**Added**
+- `/account/estate`: a post-death checklist grouped by stage with a progress bar, a document list, appointments, and estate contacts. Users can add their own tasks and reset the list. It is saved in the browser only and states plainly that it is organisational help, not legal advice.
+- An "Estate" entry in the account navigation.
+
+## Cemetery and grave search (BRD 6.1)
+
+**Added**
+- A public `/cemeteries` page: search sample cemeteries by town or area, see published plot price guidance, availability, opening hours, contact details and directions, and send a plot enquiry (stored in the browser only).
+- Grave search by name and optional year of death, showing section and plot, with records the operator has not verified clearly flagged.
+- Links from the home page's cemetery card and the footer. All data is fictional and labelled as a demonstration.
+
 ## Brand and landing page polish
 
 **Added**

@@ -388,3 +388,8 @@
     .visit__photo { max-width: 560px; }
   }
 }
+
+/* Unlayered on purpose: the hero headline sits on a dark photo and must stay white even if
+   the global h1 colour (base layer) wins the cascade in a production build. */
+.hero h1 { color: #fff; }
+.hero h1 em { color: var(--color-highlight-soft); }

@@ -38,6 +38,11 @@ const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage
 const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
 const ChemaDashboardPage = lazy(() => import('@/features/chema-wallet/ChemaDashboardPage'))
 const ContributePage = lazy(() => import('@/features/chema-wallet/ContributePage'))
+const CemeteriesPage = lazy(() => import('@/features/cemeteries/CemeteriesPage'))
+const EstatePage = lazy(() => import('@/features/estate/EstatePage'))
+const AftercarePage = lazy(() => import('@/features/aftercare/AftercarePage'))
+const ProcessionPage = lazy(() => import('@/features/procession/ProcessionPage'))
+const AssistantPage = lazy(() => import('@/features/assistant/AssistantPage'))
 const AboutPage = lazy(() => import('@/features/about/AboutPage'))
 const MarketplacePage = lazy(() => import('@/features/marketplace/MarketplacePage'))
 const ProductPage = lazy(() => import('@/features/marketplace/ProductPage'))
@@ -59,6 +64,8 @@ export function App() {
                 <Route path={`${paths.memorials}/:slug`} element={<MemorialPage />} />
                 <Route path={`${paths.contribute}/:token`} element={<ContributePage />} />
                 <Route path={paths.about} element={<AboutPage />} />
+                <Route path={paths.cemeteries} element={<CemeteriesPage />} />
+                <Route path={paths.assistant} element={<AssistantPage />} />
                 <Route path={paths.marketplace} element={<MarketplacePage />} />
                 <Route path={`${paths.marketplace}/:id`} element={<ProductPage />} />
                 <Route path="*" element={<NotFoundPage />} />
@@ -87,6 +94,9 @@ export function App() {
                   <Route path={paths.accountExhumationCoverage} element={<ExhumationCoveragePage />} />
                   <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
                   <Route path={paths.accountChemaWallet} element={<ChemaDashboardPage />} />
+                  <Route path={paths.accountEstate} element={<EstatePage />} />
+                  <Route path={paths.accountAftercare} element={<AftercarePage />} />
+                  <Route path={paths.accountProcession} element={<ProcessionPage />} />
                   <Route path={paths.accountOrders} element={<OrdersPage />} />
                   <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
                   <Route path={paths.accountProfile} element={<ProfilePage />} />
