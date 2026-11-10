@@ -97,6 +97,13 @@ const paths = {
       <path d="M10 11h4" />
     </>
   ),
+  wallet: (
+    <>
+      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1.5" />
+      <rect x="3" y="8.5" width="18" height="10.5" rx="2.5" />
+      <circle cx="16.5" cy="13.8" r="1.2" />
+    </>
+  ),
   history: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />,
   map: (
     <>
