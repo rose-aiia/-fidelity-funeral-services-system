@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { Callout } from '@/components/ui/Callout'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { QueryState } from '@/components/ui/QueryState'
-import { paths } from '@/config/routes'
+import { paths, contributePath } from '@/config/routes'
 import { site } from '@/config/site'
 import { ApiError } from '@/lib/api-error'
 import { formatDay } from '@/lib/format'
+import { chemaStore } from '@/features/chema-wallet/store'
 import { ageAtDeath, lifespan, type Memorial } from './data'
 import { Gallery } from './Gallery'
 import { LifeStory, Timeline } from './LifeStory'
@@ -88,6 +89,20 @@ function MemorialView({ memorial }: { memorial: Memorial }) {
       </header>
 
       <div className="container memorial-body">
+        {(() => {
+          const chemaCase = chemaStore.getCaseByMemorial(memorial.slug)
+          if (!chemaCase?.activated) return null
+          return (
+            <section className="card stack" aria-labelledby="send-chema-title" style={{ marginBottom: '1rem' }}>
+              <p className="eyebrow">Chema Wallet</p>
+              <h2 id="send-chema-title" className="panel__title" style={{ marginBottom: '.25rem' }}>Support the family</h2>
+              <p className="muted">You can send a community contribution for this funeral through Chema Wallet. Payments on this page are simulated for demonstration only and are separate from Fidelity policy benefits and claims.</p>
+              <div>
+                <Link className="btn btn--primary" to={contributePath(chemaCase.contributionToken)}>Send Chema</Link>
+              </div>
+            </section>
+          )
+        })()}
         <OfferingsCard memorial={memorial} />
         <LifeStory memorial={memorial} url={url} />
         <Timeline entries={memorial.timeline} />

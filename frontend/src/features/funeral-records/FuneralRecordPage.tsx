@@ -7,6 +7,7 @@ import { funeralStreamingPath, paths } from '@/config/routes'
 import { useAuth } from '@/features/auth'
 import { stageLabels, stageOrder, type AccessStatus, type RecordMedia, type RecordStageId } from './data'
 import { funeralRecordsStore } from './store'
+import { ChemaCasePanel } from '@/features/chema-wallet/ChemaCasePanel'
 import './funeral-records.css'
 
 export default function FuneralRecordPage() {
@@ -63,6 +64,8 @@ export default function FuneralRecordPage() {
       </header>
       {msg && <Callout tone="success">{msg}</Callout>}
       <div className="fr-note"><strong>Authorised access demonstration:</strong> this archive shows sample access permissions and sharing controls. In production this would require secure identity, consent and storage controls.</div>
+
+      <ChemaCasePanel funeralRecordId={archive.id} caseRef={archive.reference} personName={archive.personName} summary={archive.summary} />
 
       <div className="fr-two">
         <section className="card stack" aria-labelledby="fr-timeline">
