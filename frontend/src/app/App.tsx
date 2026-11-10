@@ -38,6 +38,7 @@ const FuneralStreamingDetailPage = lazy(() => import('@/features/funeral-streami
 const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoveragePage'))
 const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
 const ChemaDashboardPage = lazy(() => import('@/features/chema-wallet/ChemaDashboardPage'))
+const ChemaCasePage = lazy(() => import('@/features/chema-wallet/ChemaCasePage'))
 const ContributePage = lazy(() => import('@/features/chema-wallet/ContributePage'))
 const CemeteriesPage = lazy(() => import('@/features/cemeteries/CemeteriesPage'))
 const EstatePage = lazy(() => import('@/features/estate/EstatePage'))
@@ -96,6 +97,7 @@ export function App() {
                   <Route path={paths.accountExhumationCoverage} element={<ExhumationCoveragePage />} />
                   <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
                   <Route path={paths.accountChemaWallet} element={<ChemaDashboardPage />} />
+                  <Route path={`${paths.accountChemaWallet}/:id`} element={<ChemaCasePage />} />
                   <Route path={paths.accountEstate} element={<EstatePage />} />
                   <Route path={paths.accountAftercare} element={<AftercarePage />} />
                   <Route path={paths.accountAlerts} element={<AlertsPage />} />

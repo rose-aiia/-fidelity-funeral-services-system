@@ -55,6 +55,9 @@ export const funeralRecordPath = (id: string) => `${paths.accountFuneralRecords}
 export const funeralStreamingPath = (id: string) => `${paths.accountFuneralStreaming}/${id}`
 export const exhumationCoveragePath = (id: string) => `${paths.accountExhumationCoverage}/${id}`
 
+/** A Chema Wallet funeral case workspace. */
+export const chemaCasePath = (id: string) => `${paths.accountChemaWallet}/${id}`
+
 /** Public Chema Wallet contribution page for a specific funeral contribution token. */
 export const contributePath = (token: string) => `${paths.contribute}/${token}`
 
@@ -101,6 +104,7 @@ const dynamicTitles: [prefix: string, title: string][] = [
   [`${paths.accountFuneralRecords}/`, 'Funeral record | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountFuneralStreaming}/`, 'Funeral coverage | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountExhumationCoverage}/`, 'Exhumation coverage | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.accountChemaWallet}/`, 'Chema Wallet case | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.contribute}/`, 'Send Chema contribution | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.marketplace}/`, 'Marketplace | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountOrders}/`, 'Order | Fidelity Life Assurance of Zimbabwe'],
