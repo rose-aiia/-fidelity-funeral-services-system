@@ -4,7 +4,7 @@ A digital home for families in Zimbabwe and the diaspora when they lose someone.
 
 > This is a sample prototype. All plans, prices, policies, people and memorials in it are made up.
 
-![Landing page of Fidelity Funeral Services](frontend/docs/screenshots/landing-page.png)
+![new Landing page of Fidelity Funeral Services](frontend\docs\screenshots\cuirrent homepage.png)
 
 ## Who it is for
 
@@ -80,3 +80,5 @@ How the app is built, and how to connect it to a real backend, is in [frontend/d
 | --- | --- |
 | `frontend/` | The web app (Vite + React). Run with `npm run dev` on port 5173. |
 | `backend/` | The API (Express + Prisma). Copy `.env.example` to `.env`, then `npm run dev` on port 4000. |
+
+![Old Landing page of Fidelity Funeral Services](frontend/docs/screenshots/landing-page.png)
