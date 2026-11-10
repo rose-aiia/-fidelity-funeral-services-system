@@ -41,6 +41,7 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Requests', to: paths.accountRequests, icon: 'chat' },
   { label: 'Family History', to: paths.accountFamilyHistory, icon: 'users' },
   { label: 'Records', to: paths.accountFuneralRecords, icon: 'archive' },
+  { label: 'Chema Wallet', to: paths.accountChemaWallet, icon: 'wallet' },
   { label: 'Coverage', to: paths.accountFuneralStreaming, icon: 'video' },
   { label: 'Funeral day', to: paths.accountProcession, icon: 'map' },
   { label: 'Estate', to: paths.accountEstate, icon: 'file' },

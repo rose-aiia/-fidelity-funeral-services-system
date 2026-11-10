@@ -17,6 +17,7 @@ export const paths = {
   accountFuneralRecords: '/account/funeral-records',
   accountFuneralStreaming: '/account/funeral-streaming',
   accountExhumationCoverage: '/account/exhumation-coverage',
+  accountChemaWallet: '/account/chema-wallet',
   accountEstate: '/account/estate',
   accountAftercare: '/account/aftercare',
   accountProcession: '/account/funeral-day',
@@ -25,6 +26,7 @@ export const paths = {
   memorials: '/memorials',
   marketplace: '/marketplace',
   checkout: '/checkout',
+  contribute: '/contribute',
   about: '/about',
   cemeteries: '/cemeteries',
   assistant: '/support-assistant',
@@ -51,6 +53,9 @@ export const funeralRecordPath = (id: string) => `${paths.accountFuneralRecords}
 export const funeralStreamingPath = (id: string) => `${paths.accountFuneralStreaming}/${id}`
 export const exhumationCoveragePath = (id: string) => `${paths.accountExhumationCoverage}/${id}`
 
+/** Public Chema Wallet contribution page for a specific funeral contribution token. */
+export const contributePath = (token: string) => `${paths.contribute}/${token}`
+
 /** Document title per route; unknown paths fall back to the not-found title. */
 export const pageTitles: Record<string, string> = {
   [paths.home]: 'Fidelity Life Assurance of Zimbabwe | Funeral Services, Memorials & Family Support',
@@ -71,6 +76,7 @@ export const pageTitles: Record<string, string> = {
   [paths.accountFuneralRecords]: 'Digital funeral records | Fidelity Life Assurance of Zimbabwe',
   [paths.accountFuneralStreaming]: 'Live funeral coverage | Fidelity Life Assurance of Zimbabwe',
   [paths.accountExhumationCoverage]: 'Exhumation coverage (restricted) | Fidelity Life Assurance of Zimbabwe',
+  [paths.accountChemaWallet]: 'Chema Wallet | Fidelity Life Assurance of Zimbabwe',
   [paths.accountEstate]: 'Estate support | Fidelity Life Assurance of Zimbabwe',
   [paths.accountAftercare]: 'Aftercare | Fidelity Life Assurance of Zimbabwe',
   [paths.accountProcession]: 'Funeral day | Fidelity Life Assurance of Zimbabwe',
@@ -91,6 +97,7 @@ const dynamicTitles: [prefix: string, title: string][] = [
   [`${paths.accountFuneralRecords}/`, 'Funeral record | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountFuneralStreaming}/`, 'Funeral coverage | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountExhumationCoverage}/`, 'Exhumation coverage | Fidelity Life Assurance of Zimbabwe'],
+  [`${paths.contribute}/`, 'Send Chema contribution | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.marketplace}/`, 'Marketplace | Fidelity Life Assurance of Zimbabwe'],
   [`${paths.accountOrders}/`, 'Order | Fidelity Life Assurance of Zimbabwe'],
 ]
