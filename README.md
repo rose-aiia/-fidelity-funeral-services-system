@@ -4,7 +4,7 @@ A digital home for families in Zimbabwe and the diaspora when they lose someone.
 
 > This is a sample prototype. All plans, prices, policies, people and memorials in it are made up.
 
-![New Landing page of Fidelity Funeral Services](frontend\docs\screenshots\cuirrenthomepage.png)
+![New Landing page of Fidelity Funeral Services](https://github.com/rose-aiia/-fidelity-funeral-services-system/blob/main/frontend/docs/screenshots/cuirrenthomepage.png)
 
 ## Who it is for
 
