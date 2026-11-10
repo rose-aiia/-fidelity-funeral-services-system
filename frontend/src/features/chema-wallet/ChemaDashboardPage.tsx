@@ -145,7 +145,7 @@ export default function ChemaDashboardPage() {
         <StatTile icon="wallet" label="Active funeral cases" value={metrics.activeCases} hint={`${cases.length} cases in this demo`} accent />
         <StatTile icon="users" label="Contributors" value={metrics.contributors} hint={`${metrics.settledContributions} confirmed digital contributions`} />
         <StatTile icon="clock" label="Awaiting approval" value={metrics.awaitingApproval} hint="Payouts needing an independent approver" />
-        <StatTile icon="alert" label="Open disputes" value={metrics.openDisputes} hint={metrics.openDisputes > 0 ? 'Public reports under Trust & Safety review' : 'No public reports are open'} />
+        <StatTile icon="alert" label="Open disputes" value={metrics.openDisputes} hint={metrics.openDisputes > 0 ? 'Open disputes or public reports under review' : 'No open disputes or reports'} />
       </section>
 
       <div className="cw-layout">
