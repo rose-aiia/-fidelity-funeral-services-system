@@ -23,6 +23,8 @@ export type ShareState = {
   startedAt: string | null
   durationMin: number
   viewers: string[]
+  /** Optional phone numbers (E.164) for invited viewers, keyed by name. Only stored when they agreed to be messaged. */
+  contacts?: Record<string, string>
   /** Set when the family stopped sharing early or it ran out. */
   endedAt: string | null
 }

@@ -43,3 +43,8 @@ Thumbs.db
 # Vite / TS caches
 *.local
 *.tsbuildinfo
+
+# WhatsApp bridge: build output and the paired session (credentials; never commit)
+dist-whatsapp/
+.whatsapp-session/
+backend/.whatsapp-session/

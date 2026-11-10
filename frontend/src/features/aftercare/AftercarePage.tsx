@@ -4,6 +4,8 @@ import { Callout } from '@/components/ui/Callout'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { TextField } from '@/components/ui/TextField'
 import { paths } from '@/config/routes'
+import { sendAlerts, type PlanInput } from '@/features/alerts'
+import { parseContact } from '@/features/alerts/rules'
 import { daysUntil, defaultThankYou, kindLabels, newId, nextOccurrence, parseRecipients, supportResources, type AftercareState, type ReminderKind } from './data'
 import { loadAftercare, saveAftercare } from './store'
 import './aftercare.css'
@@ -42,8 +44,14 @@ export default function AftercarePage() {
     if (names.length === 0) { setError('Add at least one name, separated by commas or new lines.'); return }
     if (!message.trim()) { setError('Write a message first.'); return }
     setError('')
-    update({ ...state, thankYous: [{ id: newId('ty'), recipients: names, message: message.trim(), sentAt: new Date().toISOString() }, ...state.thankYous] })
-    setNote(`Saved as sent to ${names.length} ${names.length === 1 ? 'person' : 'people'}. This is a demonstration, so nothing was actually delivered.`)
+    const contacts = names.map(parseContact)
+    const inputs: PlanInput[] = contacts.filter((c) => c.phone).map((c) => ({
+      event: 'aftercare.thank_you', recipient: { phone: c.phone as string, consent: true },
+      payload: { name: c.name, message: message.trim().replace(/\s+/g, ' ') }, ref: `${Date.now()}:${c.phone}`,
+    }))
+    void sendAlerts(inputs)
+    update({ ...state, thankYous: [{ id: newId('ty'), recipients: contacts.map((c) => c.name), message: message.trim(), sentAt: new Date().toISOString() }, ...state.thankYous] })
+    setNote(`Saved as sent to ${names.length} ${names.length === 1 ? 'person' : 'people'}. ${inputs.length ? `${inputs.length} had a number; see Message alerts for what would be sent by SMS or WhatsApp.` : 'Add a mobile number after a name (for example "Tendai 0771234567") to send by SMS or WhatsApp.'} This is a demonstration, so nothing was actually delivered.`)
     setRecipients('')
   }
 
@@ -76,7 +84,7 @@ export default function AftercarePage() {
         <h2 id="af-thanks" className="panel__title" style={{ margin: 0 }}>Thank-you messages</h2>
         <form className="af-form" onSubmit={send} noValidate>
           <TextField label="In memory of" tag="Optional" value={person} onChange={changePerson} />
-          <TextField label="Who are you thanking?" value={recipients} onChange={setRecipients} hint="Names separated by commas." error={error} />
+          <TextField label="Who are you thanking?" value={recipients} onChange={setRecipients} hint="Names separated by commas. Add a mobile number after a name to message them, only if they agreed." error={error} />
           <div className="field">
             <label htmlFor={msgId} className="field__label">Message</label>
             <textarea id={msgId} className="textarea" rows={7} value={message} onChange={(e) => { setMessage(e.target.value); setEdited(true) }} />

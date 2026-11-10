@@ -9,6 +9,7 @@ import * as accountStore from '@/features/account/mock-store'
 import * as shopStore from '@/features/marketplace/mock-store'
 import * as memorialStore from '@/features/memorials/mock-store'
 import { marketplaceItems, type Order, type OrderStatus } from '@/features/marketplace/data'
+import { notifyOrder, notifyRequest } from '@/features/alerts/mock-triggers'
 import { applyOrderStatus, ORDER_TRANSITIONS, toPublicOrder } from '@/features/marketplace/order-flow'
 import { assignRequest, completeRequest, respondToAssignment, sortForTriage, isUrgent } from '@/features/account/request-flow'
 import type { AssistanceRequest, RequestStatus } from '@/features/account/data'
@@ -223,6 +224,7 @@ export async function assign(user: User | null, id: string, input: AssignRequest
   if (!result.ok) throw new ApiError(409, result.code, 'This request is already complete')
 
   accountStore.saveRequest(entry.userId, result.request)
+  notifyRequest(entry.userId, result.request, 'request.assigned')
   record(staff.user, 'assign', 'request', entry.request.reference, `Assigned ${entry.request.reference} to ${provider.name}`)
   return toAdminRequest({ userId: entry.userId, request: result.request }, staff, w.users)
 }
@@ -243,6 +245,7 @@ export async function respond(user: User | null, id: string, response: Assignmen
   if (!result.ok) throw new ApiError(409, result.code, 'That isn’t possible right now')
 
   accountStore.saveRequest(entry.userId, result.request)
+  notifyRequest(entry.userId, result.request, { accepted: 'request.accepted', declined: 'request.declined', completed: 'request.completed' }[response.status] as 'request.accepted')
   record(staff.user, 'update', 'request', entry.request.reference, `${RESPONSE_LABEL[response.status]} ${entry.request.reference}`)
   return toAdminRequest({ userId: entry.userId, request: result.request }, staff, w.users)
 }
@@ -273,6 +276,7 @@ export async function updateOrder(user: User | null, id: string, status: OrderSt
   if (!result.ok) throw new ApiError(409, result.code, 'That isn’t possible right now')
 
   shopStore.saveOrderRecord(result.record)
+  notifyOrder(entry.userId, result.record)
   record(staff.user, 'update', 'order', entry.order.reference, `Moved ${entry.order.reference} to ${STATUS_LABEL[status]}`)
   return toAdminOrder({ userId: entry.userId, order: toPublicOrder(result.record) }, staff, w.users)
 }

@@ -2,6 +2,8 @@ import { useEffect, useId, useState, type FormEvent } from 'react'
 import { Callout } from '@/components/ui/Callout'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { TextField } from '@/components/ui/TextField'
+import { sendAlerts, type PlanInput } from '@/features/alerts'
+import { normaliseInternationalPhone } from '@/lib/phone'
 import { durationOptions, funeralDays, isSharing, LEG_SECONDS, minutesLeft, simulatedPosition, type FuneralDay, type ShareState } from './data'
 import { loadShare, saveShare } from './store'
 import './procession.css'
@@ -40,6 +42,9 @@ function DayCard({ day }: { day: FuneralDay }) {
   const [share, setShare] = useState<ShareState>(() => loadShare(day.id))
   const [now, setNow] = useState(() => Date.now())
   const [viewer, setViewer] = useState('')
+  const [viewerPhone, setViewerPhone] = useState('')
+  const [viewerAgreed, setViewerAgreed] = useState(false)
+  const [viewerError, setViewerError] = useState('')
   const [consent, setConsent] = useState(false)
   const [duration, setDuration] = useState(share.durationMin)
   const consentId = useId()
@@ -61,14 +66,43 @@ function DayCard({ day }: { day: FuneralDay }) {
     e.preventDefault()
     const name = viewer.trim()
     if (!name || share.viewers.some((v) => v.toLowerCase() === name.toLowerCase())) return
-    update({ ...share, viewers: [...share.viewers, name] })
+    let contacts = share.contacts
+    if (viewerPhone.trim()) {
+      const phone = normaliseInternationalPhone(viewerPhone)
+      if (!phone) { setViewerError('Enter a valid number, with a + country code if it is not a Zimbabwean number.'); return }
+      if (!viewerAgreed) { setViewerError('Confirm that they agreed to receive messages, or leave the number blank.'); return }
+      contacts = { ...contacts, [name]: phone }
+    }
+    setViewerError('')
+    update({ ...share, viewers: [...share.viewers, name], contacts })
     setViewer('')
+    setViewerPhone('')
+    setViewerAgreed(false)
+  }
+
+  /** Messages the invited relatives who gave a number and agreed. Alert failures never block the action. */
+  function notify(event: 'procession.started' | 'procession.stopped', next: ShareState, minutes?: number) {
+    const inputs: PlanInput[] = Object.entries(next.contacts ?? {}).map(([name, phone]) => ({
+      event,
+      recipient: { phone, consent: true },
+      payload: { name, deceased: day.person, minutes, link: `${window.location.origin}${window.location.pathname}` },
+      ref: `${day.id}:${next.startedAt ?? ''}`,
+    }))
+    void sendAlerts(inputs)
   }
 
   function start() {
     const t = Date.now()
     setNow(t)
-    update({ ...share, startedAt: new Date(t).toISOString(), endedAt: null, durationMin: duration })
+    const next = { ...share, startedAt: new Date(t).toISOString(), endedAt: null, durationMin: duration }
+    update(next)
+    notify('procession.started', next, duration)
+  }
+
+  function stop() {
+    const next = { ...share, endedAt: new Date().toISOString() }
+    update(next)
+    notify('procession.stopped', next)
   }
 
   const status = sharing ? <StatusChip tone="success">Sharing is on</StatusChip> : hasEnded ? <StatusChip tone="neutral">Sharing ended</StatusChip> : <StatusChip tone="neutral">Sharing is off</StatusChip>
@@ -106,7 +140,7 @@ function DayCard({ day }: { day: FuneralDay }) {
         <>
           <Tracker day={day} share={share} now={now} />
           <p className="pr-hint">Visible to: {share.viewers.length ? share.viewers.join(', ') : 'no one yet. Invite relatives below.'} · {minutesLeft(share, now)} min of sharing left.</p>
-          <div className="pr-actions"><button className="btn btn--outline btn--sm" type="button" onClick={() => update({ ...share, endedAt: new Date().toISOString() })}>Stop sharing now</button></div>
+          <div className="pr-actions"><button className="btn btn--outline btn--sm" type="button" onClick={stop}>Stop sharing now</button></div>
         </>
       ) : (
         <div className="pr-form">
@@ -128,13 +162,20 @@ function DayCard({ day }: { day: FuneralDay }) {
 
       <form className="pr-form" onSubmit={addViewer} aria-label="Invite a relative">
         <TextField label="Invite a relative to see the location" value={viewer} onChange={setViewer} />
+        <TextField label="Mobile number" tag="Optional" hint="Add a number to message them when sharing starts and stops." value={viewerPhone} onChange={setViewerPhone} inputMode="tel" error={viewerError} />
+        {viewerPhone.trim() && (
+          <label style={{ display: 'flex', gap: 8, alignItems: 'start' }}>
+            <input type="checkbox" checked={viewerAgreed} onChange={(e) => setViewerAgreed(e.target.checked)} style={{ marginTop: 4 }} />
+            <span>They agreed to receive SMS or WhatsApp messages about this funeral.</span>
+          </label>
+        )}
         <div className="pr-actions"><button className="btn btn--outline btn--sm" type="submit">Invite</button></div>
         {share.viewers.length > 0 && (
           <ul className="pr-stops">
             {share.viewers.map((v) => (
               <li key={v} className="pr-actions" style={{ justifyContent: 'space-between' }}>
-                <span>{v}</span>
-                <button className="btn btn--outline btn--sm" type="button" aria-label={`Remove ${v}`} onClick={() => update({ ...share, viewers: share.viewers.filter((x) => x !== v) })}>Remove</button>
+                <span>{v}{share.contacts?.[v] ? ' · will be messaged' : ''}</span>
+                <button className="btn btn--outline btn--sm" type="button" aria-label={`Remove ${v}`} onClick={() => update({ ...share, viewers: share.viewers.filter((x) => x !== v), contacts: Object.fromEntries(Object.entries(share.contacts ?? {}).filter(([k]) => k !== v)) })}>Remove</button>
               </li>
             ))}
           </ul>

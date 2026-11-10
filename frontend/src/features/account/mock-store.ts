@@ -1,3 +1,4 @@
+import { notifyRequest } from '@/features/alerts/mock-triggers'
 import { ApiError } from '@/lib/api-error'
 import type { AssistanceRequest, NewRequest, Policy } from './data'
 import { MESSAGE_MAX_LENGTH, REQUEST_KINDS } from './data'
@@ -88,6 +89,7 @@ export function createRequest(userId: string, input: NewRequest): AssistanceRequ
 
   const all = readStore()
   writeJson(REQUESTS_KEY, { ...all, [userId]: [request, ...(all[userId] ?? [])] })
+  notifyRequest(userId, request, 'request.received')
   return request
 }
 

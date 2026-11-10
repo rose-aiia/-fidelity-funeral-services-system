@@ -444,3 +444,130 @@ model BurialRecord {
 
   @@map("burial_records")
 }
+
+// ---- SMS / WhatsApp alerts (see src/alerts) ----
+
+enum AlertChannel {
+  SMS
+  WHATSAPP
+}
+
+enum AlertOutboxStatus {
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  FAILED
+  BLOCKED
+}
+
+/// One outbound message. The worker claims rows where status = QUEUED and scheduled_for <= now.
+model AlertOutbox {
+  id                String            @id @default(uuid()) @db.Uuid
+  channel           AlertChannel
+  event             String
+  recipient         String            // E.164
+  templateId        String            @map("template_id")
+  body              String
+  params            String[]
+  status            AlertOutboxStatus @default(QUEUED)
+  provider          String?
+  providerMessageId String?           @map("provider_message_id")
+  attempts          Int               @default(0)
+  error             String?
+  blockedReason     String?           @map("blocked_reason")
+  dedupeKey         String            @map("dedupe_key")
+  scheduledFor      DateTime          @map("scheduled_for")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, scheduledFor])
+  @@index([dedupeKey])
+  @@index([provider, providerMessageId])
+  @@map("alert_outbox")
+}
+
+/// A person's per-event, per-channel opt-in. No row means "off".
+model AlertPreference {
+  userId    String       @map("user_id") @db.Uuid
+  event     String
+  channel   AlertChannel
+  enabled   Boolean      @default(false)
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@id([userId, event, channel])
+  @@map("alert_preferences")
+}
+
+/// Numbers that replied STOP, per channel. Checked before every send.
+model AlertOptOut {
+  phone     String
+  channel   AlertChannel
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@id([phone, channel])
+  @@map("alert_opt_outs")
+}
+
+// ---- WhatsApp bridge (ported from Kuwana; one company-owned session) ----
+
+enum WhatsAppConnectionStatus {
+  DISCONNECTED
+  CONNECTING
+  AWAITING_SCAN
+  CONNECTED
+  RECONNECTING
+  ERROR
+}
+
+/// The state of the paired WhatsApp session. The bridge writes it; the API only reads it.
+/// There is one row, keyed "company" (Kuwana keyed one per user).
+model WhatsAppConnection {
+  sessionKey       String                   @id @map("session_key")
+  status           WhatsAppConnectionStatus @default(DISCONNECTED)
+  phone            String?
+  jid              String?
+  qrCode           String?                  @map("qr_code")
+  pairingCode      String?                  @map("pairing_code")
+  qrExpiresAt      DateTime?                @map("qr_expires_at")
+  pairingExpiresAt DateTime?                @map("pairing_expires_at")
+  connectedAt      DateTime?                @map("connected_at")
+  lastActiveAt     DateTime                 @default(now()) @map("last_active_at")
+  errorMessage     String?                  @map("error_message")
+  sessionDir       String?                  @map("session_dir")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("whatsapp_connections")
+}
+
+/// Append-only audit trail of bridge activity (sessions, queue, settings). Codes are masked before storing.
+model WhatsAppEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String
+  status    String
+  phone     String?
+  jid       String?
+  details   String?
+  metadata  Json?
+  latencyMs Int?     @map("latency_ms")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([type, createdAt])
+  @@index([status, createdAt])
+  @@index([phone, createdAt])
+  @@index([createdAt])
+  @@map("whatsapp_events")
+}
+
+/// Small key-value settings: the WhatsApp master switch, SMS provider and sender ID, template overrides.
+/// Secrets (API keys) never go here; they stay in environment variables.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

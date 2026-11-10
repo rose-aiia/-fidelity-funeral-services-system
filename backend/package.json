@@ -8,7 +8,13 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "sync:alerts": "node scripts/sync-alert-templates.mjs",
+    "worker": "tsx src/worker.ts",
+    "whatsapp:build": "node scripts/whatsapp/build.mjs",
+    "whatsapp": "npm run whatsapp:build && node --enable-source-maps dist-whatsapp/bridge.mjs",
+    "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -18,15 +24,21 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "esbuild": "^0.28.2",
     "nodemon": "^3.1.14",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.38.1",
     "prisma": "^7.10.1",
     "zod": "^3.25.76"
   }

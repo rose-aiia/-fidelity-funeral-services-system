@@ -19,6 +19,7 @@ const PortalRequestsPage = lazy(() => import('@/features/admin/RequestsPage'))
 const PortalOrdersPage = lazy(() => import('@/features/admin/OrdersPage'))
 const PortalCustomersPage = lazy(() => import('@/features/admin/CustomersPage'))
 const PortalProvidersPage = lazy(() => import('@/features/admin/ProvidersPage'))
+const PortalMessagingPage = lazy(() => import('@/features/alerts/MessagingPage'))
 const PortalActivityPage = lazy(() => import('@/features/admin/ActivityPage'))
 const LoginPage = lazy(() => import('@/features/account/LoginPage'))
 const SignupPage = lazy(() => import('@/features/account/SignupPage'))
@@ -38,6 +39,7 @@ const ExhumationCoveragePage = lazy(() => import('@/features/exhumation-coverage
 const ExhumationCoverageDetailPage = lazy(() => import('@/features/exhumation-coverage/ExhumationCoverageDetailPage'))
 const CemeteriesPage = lazy(() => import('@/features/cemeteries/CemeteriesPage'))
 const EstatePage = lazy(() => import('@/features/estate/EstatePage'))
+const AlertsPage = lazy(() => import('@/features/alerts/AlertsPage'))
 const AftercarePage = lazy(() => import('@/features/aftercare/AftercarePage'))
 const ProcessionPage = lazy(() => import('@/features/procession/ProcessionPage'))
 const AssistantPage = lazy(() => import('@/features/assistant/AssistantPage'))
@@ -92,6 +94,7 @@ export function App() {
                   <Route path={`${paths.accountExhumationCoverage}/:id`} element={<ExhumationCoverageDetailPage />} />
                   <Route path={paths.accountEstate} element={<EstatePage />} />
                   <Route path={paths.accountAftercare} element={<AftercarePage />} />
+                  <Route path={paths.accountAlerts} element={<AlertsPage />} />
                   <Route path={paths.accountProcession} element={<ProcessionPage />} />
                   <Route path={paths.accountOrders} element={<OrdersPage />} />
                   <Route path={`${paths.accountOrders}/:id`} element={<OrderPage />} />
@@ -108,6 +111,7 @@ export function App() {
                     <Route path={paths.portalCustomers} element={<PortalCustomersPage />} />
                     <Route path={paths.portalProviders} element={<PortalProvidersPage />} />
                     <Route path={paths.portalActivity} element={<PortalActivityPage />} />
+                    <Route path={paths.portalMessaging} element={<PortalMessagingPage />} />
                   </Route>
                 </Route>
               </Route>

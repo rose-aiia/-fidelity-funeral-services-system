@@ -2,6 +2,36 @@
 
 What changed in the front end (`frontend/`), newest first. The app runs on sample data by default, so every item below works without a backend. Where a change touches the API, the contract is in `frontend/docs/openapi.yaml` and a reference server is `npm run mock-api`.
 
+## SMS and WhatsApp alerts
+
+**Added (front end, simulated)**
+- `/account/alerts` ("Alerts" in the account navigation): choose which updates arrive by SMS or WhatsApp. Everything is off until switched on. An outbox shows exactly what would be sent, to whom, and why anything was blocked (not opted in, no consent, STOP, duplicate, invalid number). A "Simulate STOP" button shows opt-out working.
+- Triggers: help request received, assigned, accepted, declined and completed (sent on the contact preference chosen on the request); procession sharing started and stopped and the funeral stream going live (to invited relatives who gave a number and agreed); aftercare thank-yous and anniversary reminders (7 and 1 days before); order paid, confirmed, delivered and payment failed; premium due (3 days before).
+- Non-urgent messages are held between 21:00 and 06:00 Harare time. Funeral-day messages are not.
+- Numbers outside Zimbabwe are accepted with a `+` country code, so relatives abroad can be messaged. Add a number after a name in the thank-you form, or beside a relative in the procession form.
+- The dead "Set reminder (sample)" button on a scheduled stream now links to the alert settings.
+- Shona and Ndebele wording is not written yet; those recipients receive English until a native speaker supplies it (`features/alerts/templates.ts`).
+
+**Added (staff portal)**
+- `/provider-portal/messaging` ("Messaging", admin only): pair the company WhatsApp number by QR code or pairing code, reconnect or disconnect it, switch WhatsApp sending on or off, and choose and test the SMS provider. In demonstration mode a "Simulate scan" button stands in for the phone.
+
+**Added (backend, off by default), ported from the Kuwana architecture**
+- Three processes: the API, a pg-boss worker (`src/worker.ts`, sends SMS), and a Baileys WhatsApp bridge (`src/whatsapp/bridge.ts`, bundled to `dist-whatsapp/bridge.mjs`) that holds one company-owned WhatsApp session, consumes the `send-whatsapp` queue and exposes a localhost control server. `backend/ecosystem.config.cjs` runs all three under pm2; run exactly one bridge.
+- One entry point, `deliverAlert` (`src/alerts/deliver.ts`): phone, STOP, consent, dedupe and quiet-hours rules, then an `AlertOutbox` row and a pg-boss job. Both consumers share `processOutboxJob`, which never sends a message twice and retries through the queue.
+- SMS through Africa's Talking, then Twilio, then a log fallback, using the provider the admin chose (provider and sender ID live in the database, API keys only in the environment). Delivery receipts update the outbox from Africa's Talking, Twilio (signature checked) and WhatsApp (Baileys receipts).
+- STOP and START replies on WhatsApp opt the number out or back in. WhatsApp sends are paced with a minimum gap and jitter, and the master switch is checked on every send.
+- Prisma: `AlertOutbox`, `AlertPreference`, `AlertOptOut`, `WhatsAppConnection`, `WhatsAppEvent`, `AppSetting`, with the first migration in `backend/prisma/migrations`. Prisma 7 now connects through `@prisma/adapter-pg`.
+- Admin API under `/api/admin` (WhatsApp session, master switch, SMS settings and test, events, 24-hour stats). `ALERTS_ENABLED` is false and `ALERTS_MODE` is `log` by default, so nothing is sent until configured. See `backend/.env.example`.
+- Templates are written once in the frontend and copied into the backend with `npm run sync:alerts`; a backend test fails if they drift.
+- Fixes over Kuwana: constant-time bridge secret check, saved SMS settings are actually used by the sender, provider message ids are recorded, and STOP is honoured.
+
+**Not done yet**
+- Backend authentication does not exist, so `/api/alerts/*` and `/api/admin/*` use an interim shared token (`ALERTS_API_TOKEN`). The front end cannot send that token, so live mode for the Alerts page and the Messaging page is not usable until staff authentication is added (and `/alerts/state` needs the signed-in user instead of a `userId` query). The reference mock server (`scripts/mock-api.mjs`) does not implement alerts.
+- Server-side cron for reminders and premium-due alerts needs aftercare and policy data moved off the browser first.
+- Baileys is an unofficial WhatsApp client: it can break when WhatsApp changes and the number can be banned. Use a dedicated number, keep volumes low, send only to opted-in people, and rely on SMS as the fallback. Sender IDs must be registered for SMS. WhatsApp messages go out as ordinary text, so there are no template approvals to obtain.
+- Delivery receipts for WhatsApp depend on Baileys events and have only been unit-tested; pairing a real number and sending a real message have not been tried.
+- BRD section 3.2 excludes real-time messaging from the prototype; update the BRD to reflect this change.
+
 ## Grief support assistant (BRD 6.4)
 
 **Added**

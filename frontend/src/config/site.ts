@@ -45,6 +45,7 @@ export const accountNav: AccountNavItem[] = [
   { label: 'Funeral day', to: paths.accountProcession, icon: 'map' },
   { label: 'Estate', to: paths.accountEstate, icon: 'file' },
   { label: 'Aftercare', to: paths.accountAftercare, icon: 'heart' },
+  { label: 'Alerts', to: paths.accountAlerts, icon: 'chat' },
   { label: 'Orders', to: paths.accountOrders, icon: 'bag' },
   { label: 'Profile', to: paths.accountProfile, icon: 'user' },
 ]
@@ -62,6 +63,7 @@ export function portalNav(role: 'admin' | 'provider'): AccountNavItem[] {
     { label: 'Customers', to: paths.portalCustomers, icon: 'users' },
     { label: 'Providers', to: paths.portalProviders, icon: 'shield' },
     { label: 'Activity', to: paths.portalActivity, icon: 'clock' },
+    { label: 'Messaging', to: paths.portalMessaging, icon: 'chat' },
   ]
 }
 

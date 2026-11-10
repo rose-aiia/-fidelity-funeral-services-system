@@ -11,6 +11,7 @@ import {
   toPublicOrder,
   type OrderRecord,
 } from './order-flow'
+import { notifyOrder } from '@/features/alerts/mock-triggers'
 import { hasErrors, validateDelivery, validatePayment } from './validation'
 
 // The "server" behind order endpoints in mock mode. Orders persist in localStorage, seeded with a short
@@ -44,7 +45,10 @@ function load(): OrderRecord[] {
   const now = Date.now()
   const stored = read()
   const advanced = stored.map((record) => advanceOrder(record, now))
-  if (advanced.some((record, index) => record !== stored[index])) write(advanced)
+  if (advanced.some((record, index) => record !== stored[index])) {
+    write(advanced)
+    advanced.forEach((record, index) => { if (record.status !== stored[index].status) notifyOrder(record.ownerId, record) })
+  }
   return advanced
 }
 
@@ -100,6 +104,7 @@ export function payOrder(userId: string, id: string, payment: PaymentInput): Ord
   }
 
   const next = startPayment(record, payment, Date.now())
+  if (next.status !== record.status) notifyOrder(userId, next)
   write(records.map((candidate) => (candidate.id === id ? next : candidate)))
   return toPublicOrder(next)
 }
@@ -111,6 +116,7 @@ export function resolveHostedPayment(userId: string, id: string, outcome: 'paid'
   if (!record) throw notFound()
 
   const next = resolvePayment(record, outcome, Date.now())
+  if (next.status !== record.status) notifyOrder(userId, next)
   write(records.map((candidate) => (candidate.id === id ? next : candidate)))
   return toPublicOrder(next)
 }

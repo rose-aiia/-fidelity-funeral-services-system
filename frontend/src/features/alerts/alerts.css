@@ -1,0 +1,15 @@
+@layer features {
+  .al-grid { display: grid; gap: var(--space-5); }
+  .al-group { border: 0; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .al-group legend { font-weight: 600; margin-bottom: var(--space-2); }
+  .al-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .al-row { display: flex; gap: var(--space-3); justify-content: space-between; align-items: center; flex-wrap: wrap; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+  .al-toggles { display: flex; gap: var(--space-4); }
+  .al-toggles label { display: inline-flex; gap: var(--space-2); align-items: center; }
+  .al-head { display: flex; gap: var(--space-3); justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .al-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .al-item { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); display: grid; gap: var(--space-1); }
+  .al-item__top { display: flex; justify-content: space-between; gap: var(--space-3); align-items: center; }
+  .al-meta, .al-hint { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
+  .al-body { margin: 0; white-space: pre-wrap; }
+}

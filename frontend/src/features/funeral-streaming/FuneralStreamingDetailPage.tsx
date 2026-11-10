@@ -4,6 +4,8 @@ import { Callout } from '@/components/ui/Callout'
 import { Icon } from '@/components/ui/Icon'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { funeralRecordPath, paths } from '@/config/routes'
+import { sendAlerts, type PlanInput } from '@/features/alerts'
+import { normaliseInternationalPhone } from '@/lib/phone'
 import { statusLabels, statusTone, type StreamStatus } from './data'
 import { funeralStreamingStore } from './store'
 import './funeral-streaming.css'
@@ -15,7 +17,15 @@ export default function FuneralStreamingDetailPage() {
   const [invite, setInvite] = useState({ name: '', contact: '' })
   if (!stream) return <div className="page-stack"><div className="card empty empty--large"><h1 className="panel__title">Coverage not found</h1><Link className="btn btn--primary" to={paths.accountFuneralStreaming}>Back</Link></div></div>
   const flash = (t: string) => { setMsg(t); window.setTimeout(() => setMsg(''), 2500) }
-  const setStatus = (status: StreamStatus) => { const n = funeralStreamingStore.setStatus(stream.id, status); if (n) setStream(n); flash(`Status changed to ${statusLabels[status]} (simulation).`) }
+  const notifyLive = () => {
+    // Viewers whose contact is a phone number are messaged when the service goes live. Email contacts are skipped.
+    const inputs: PlanInput[] = stream.viewers.flatMap((v): PlanInput[] => {
+      const phone = v.status === 'revoked' ? null : normaliseInternationalPhone(v.contact)
+      return phone ? [{ event: 'stream.live', recipient: { phone, consent: true }, payload: { name: v.name, deceased: stream.personName, link: window.location.href }, ref: `${stream.id}:live:${v.id}` }] : []
+    })
+    void sendAlerts(inputs)
+  }
+  const setStatus = (status: StreamStatus) => { if (status === 'live' && stream.status !== 'live') notifyLive(); const n = funeralStreamingStore.setStatus(stream.id, status); if (n) setStream(n); flash(`Status changed to ${statusLabels[status]} (simulation).`) }
   const addViewer = (e: React.FormEvent) => { e.preventDefault(); if (!invite.name.trim() || !invite.contact.trim()) return; const n = funeralStreamingStore.addViewer(stream.id, invite.name.trim(), invite.contact.trim()); if (n) setStream(n); setInvite({ name: '', contact: '' }); flash('Viewer invitation created (prototype).') }
   const saveRecording = () => { const n = funeralStreamingStore.saveRecording(stream.id, stream.savedToArchiveId ?? 'fr-nyathi'); if (n) setStream(n); flash('Recording linked to Digital Funeral Records archive (prototype).') }
 
@@ -44,7 +54,7 @@ export default function FuneralStreamingDetailPage() {
           <div className="fs-actions" style={{ justifyContent: 'center' }}>
             {stream.status === 'live' && <button type="button" className="btn btn--primary">Pause sample (simulated)</button>}
             {stream.status === 'ended' && stream.recordingAvailable && <button type="button" className="btn btn--primary">Play recording (simulated)</button>}
-            {stream.status === 'scheduled' && <button type="button" className="btn btn--outline">Set reminder (sample)</button>}
+            {stream.status === 'scheduled' && <Link className="btn btn--outline" to={paths.accountAlerts}>Set up message alerts</Link>}
           </div>
         </div>
       </section>
