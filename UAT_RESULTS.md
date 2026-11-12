@@ -9,12 +9,12 @@
 
 | Result | Count |
 | --- | --- |
-| Pass | 16 |
+| Pass | 17 |
 | Pass with note | 3 |
-| Not run | 4 |
+| Not run | 8 |
 | Fail | 0 |
 
-Also: 178 of 178 unit tests pass (vitest, 15 files). No console or page errors on any of 71 route visits across all personas.
+Also: 178 of 178 unit tests pass (vitest, 15 files). No console or page errors on any of 69 route visits across all personas.
 
 ## Results by plan section
 
